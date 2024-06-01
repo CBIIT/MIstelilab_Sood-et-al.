@@ -1,0 +1,74 @@
+---
+title: "Untitled"
+author: "Varun"
+date: "4/25/2023"
+output: html_document
+---
+- Reads the absolute change file from differe nt folders for HBEC MCF7 and HCT116
+- Each of these files were generated from section 2A of "ClassAndOverall_changes_HBEC" where subtracted 1 from each replicate , took abosulte of the number and took mean for each class 
+
+```{r}
+library(readr)
+library (dplyr)
+library(ggplot2)
+library(plyr)
+library(tidyverse)
+library(knitr)
+library(SpatialTools)
+library(reshape2)
+library(data.table)
+library(tidyr)
+library(RColorBrewer)
+library(gplots)
+library(matrixStats) #https://www.datasciencemadesimple.com/row-wise-standard-deviation-row-standard-deviation-in-dataframe-r-2/
+
+```
+
+
+
+
+
+
+```{r}
+HBEC_All<-read.csv(file= 'Output/HBEC_mod_class_average_freq_int_het.csv')
+MCF7_freq1<-read.csv(file= 'Output//MCF7_mod_class_average_freq_int_het.csv')
+HCT116_freq1<-read.csv(file= 'Output//HCT116_mod_class_average_freq_int_het.csv')
+
+
+
+All_cell <- rbind(HBEC_All,MCF7_freq1, HCT116_freq1)
+
+colnames(All_cell)
+HBEC_All<- HBEC_All[-1]
+
+
+         
+   
+All_cell$freq_std = rowSds(as.matrix(All_cell[,c(3,4)]))
+All_cell$int_std = rowSds(as.matrix(All_cell[,c(7,8)]))
+All_cell$het_std = rowSds(as.matrix(All_cell[,c(11,12)]))
+  
+   
+All_cell <- All_cell %>% mutate(freq_SE = freq_std/1.414, 
+                                int_SE = int_std/1.414,
+                                het_SE = het_std/1.414, 
+                                freq_mean = (freq_mean1+freq_mean2)/2, 
+                                int_mean = (int_mean1+int_mean2)/2,
+                                het_mean = (het_mean1+het_mean2)/2)
+
+
+
+for_export<- All_cell[, c(2,5,20, 17, 21, 18, 22, 19)]
+colnames((for_export))
+
+
+   
+
+  
+
+write.csv(for_export, "Output/Classwise AbsChange_3Cells.csv")
+
+
+
+```
+

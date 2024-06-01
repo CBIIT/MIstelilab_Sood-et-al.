@@ -1,0 +1,622 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(readr)
+library (dplyr)
+library(ggplot2)
+library(plyr)
+library(tidyverse)
+library(knitr)
+library(SpatialTools)
+library(reshape2)
+library(data.table)
+library(tidyr)
+library(RColorBrewer)
+library(gplots)
+```
+             Reading data
+
+- Reading spot segmentation data for all genes
+
+```{r}
+pat<- "*Spots 488*"
+
+pat_Dnajc5_Rpap3<- "*Spots*"  # these experiments were done later so different name of the files
+
+
+
+
+paths_Nras <- dir (path = "Data/Nras/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Nras) <- basename(paths_Nras)
+total.data_Nras <-ldply (paths_Nras, fread , sep = "\t")
+intensity.data_Nras <- total.data_Nras[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Nras,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+paths_Errfi1 <- dir (path = "Data/Errfi1/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Errfi1) <- basename(paths_Errfi1)
+total.data_Errfi1 <-ldply (paths_Errfi1, fread , sep = "\t")
+intensity.data_Errfi1 <- total.data_Errfi1[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Errfi1,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+paths_Myc2 <- dir (path = "Data/Myc/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Myc2) <- basename(paths_Myc2)
+total.data_Myc2 <-ldply (paths_Myc2, fread , sep = "\t")
+intensity.data_Myc2 <- total.data_Myc2[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Myc2,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+paths_Rab7 <- dir (path = "Data/Rab7a/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Rab7) <- basename(paths_Rab7)
+total.data_Rab7 <-ldply (paths_Rab7, fread , sep = "\t")
+intensity.data_Rab7 <- total.data_Rab7[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Rab7,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+
+
+paths_Gapdh <- dir (path = "Data/Gapdh/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Gapdh) <- basename(paths_Gapdh)
+total.data_Gapdh <-ldply (paths_Gapdh, fread , sep = "\t")
+intensity.data_Gapdh <- total.data_Gapdh[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Gapdh,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+
+
+paths_Dnajc5 <- dir (path = "Data/Dnajc5/", pattern = pat_Dnajc5_Rpap3, full.names = TRUE, recursive = TRUE) 
+names(paths_Dnajc5) <- basename(paths_Dnajc5)
+total.data_Dnajc5 <-ldply (paths_Dnajc5, fread , sep = "\t")
+intensity.data_Dnajc5 <- total.data_Dnajc5[c("WellName", "Spots - Corrected Spot Intensity")]
+setnames(intensity.data_Dnajc5,"Spots - Corrected Spot Intensity" , "Intensity" )
+
+
+paths_Rpap3 <- dir (path = "Data/Rpap3/", pattern = pat_Dnajc5_Rpap3, full.names = TRUE, recursive = TRUE) 
+names(paths_Rpap3) <- basename(paths_Rpap3)
+total.data_Rpap3 <-ldply (paths_Rpap3, fread , sep = "\t")
+intensity.data_Rpap3 <- total.data_Rpap3[c("WellName", "Spots - Corrected Spot Intensity")]
+setnames(intensity.data_Rpap3,"Spots - Corrected Spot Intensity" , "Intensity" )
+
+
+
+paths_Canx <- dir (path = "Data/Canx/", pattern = pat_Dnajc5_Rpap3, full.names = TRUE, recursive = TRUE) 
+names(paths_Canx) <- basename(paths_Canx)
+total.data_Canx <-ldply (paths_Canx, fread , sep = "\t")
+intensity.data_Canx <- total.data_Canx[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Canx,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+
+
+paths_Egfr <- dir (path = "Data/Egfr/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Egfr) <- basename(paths_Egfr)
+total.data_Egfr <-ldply (paths_Egfr, fread , sep = "\t")
+intensity.data_Egfr <- total.data_Egfr[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Egfr,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+
+
+paths_Kpnb1 <- dir (path = "Data/Kpnb1/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Kpnb1) <- basename(paths_Kpnb1)
+total.data_Kpnb1 <-ldply (paths_Kpnb1, fread , sep = "\t")
+intensity.data_Kpnb1 <- total.data_Kpnb1[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Kpnb1,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+
+
+
+
+paths_P53 <- dir (path = "Data/P53/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_P53) <- basename(paths_P53)
+total.data_P53 <-ldply (paths_P53, fread , sep = "\t")
+intensity.data_P53 <- total.data_P53[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_P53,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+
+
+paths_RhoA <- dir (path = "Data/RhoA/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_RhoA) <- basename(paths_RhoA)
+total.data_RhoA <-ldply (paths_RhoA, fread , sep = "\t")
+intensity.data_RhoA <- total.data_RhoA[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_RhoA,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+
+
+
+paths_Sec16a <- dir (path = "Data/Sec16a/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Sec16a) <- basename(paths_Sec16a)
+total.data_Sec16a <-ldply (paths_Sec16a, fread , sep = "\t")
+intensity.data_Sec16a <- total.data_Sec16a[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Sec16a,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+
+
+
+
+
+paths_Slc2a1 <- dir (path = "Data/Slc2a1/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Slc2a1) <- basename(paths_Slc2a1)
+total.data_Slc2a1 <-ldply (paths_Slc2a1, fread , sep = "\t")
+intensity.data_Slc2a1 <- total.data_Slc2a1[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Slc2a1,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+
+
+ 
+```
+
+
+- Calculating the mean , SD and Int for all and combining them all in one file
+
+```{r}
+HetF_Canx <- intensity.data_Canx %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% 
+  filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% 
+  dplyr:::summarize ( Mean_Canx = mean (Intensity), SD_Canx = sd(Intensity))%>% 
+  dplyr:::mutate(Het_Canx = SD_Canx*SD_Canx/Mean_Canx)
+
+
+HetF_Dnajc5 <- intensity.data_Dnajc5 %>% as_tibble%>% group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_Dnajc5 = mean (Intensity), SD_Dnajc5 = sd(Intensity))%>% dplyr:::mutate(Het_Dnajc5 = SD_Dnajc5*SD_Dnajc5/Mean_Dnajc5)
+
+HetF_Egfr <- intensity.data_Egfr %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% 
+  filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_Egfr = mean (Intensity), SD_Egfr = sd(Intensity))%>% dplyr:::mutate(Het_Egfr = SD_Egfr*SD_Egfr/Mean_Egfr)
+
+
+HetF_Nras <- intensity.data_Nras %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% 
+  filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_Nras = mean (Intensity), SD_Nras = sd(Intensity))%>% dplyr:::mutate(Het_Nras = SD_Nras*SD_Nras/Mean_Nras)
+
+
+
+
+HetF_Errfi1 <- intensity.data_Errfi1 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% 
+  filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_Errfi1 = mean (Intensity), SD_Errfi1 = sd(Intensity))%>% dplyr:::mutate(Het_Errfi1 = SD_Errfi1*SD_Errfi1/Mean_Errfi1)
+
+
+  HetF_Gapdh <- intensity.data_Gapdh %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_Gapdh = mean (Intensity), SD_Gapdh = sd(Intensity))%>% dplyr:::mutate(Het_Gapdh = SD_Gapdh*SD_Gapdh/Mean_Gapdh)
+  
+
+HetF_Kpnb1 <- intensity.data_Kpnb1 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_Kpnb1 = mean (Intensity), SD_Kpnb1 = sd(Intensity))%>% dplyr:::mutate(Het_Kpnb1 = SD_Kpnb1*SD_Kpnb1/Mean_Kpnb1)
+
+HetF_Myc2 <- intensity.data_Myc2 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_Myc2 = mean (Intensity), SD_Myc2 = sd(Intensity))%>% dplyr:::mutate(Het_Myc2 = SD_Myc2*SD_Myc2/Mean_Myc2)
+
+
+HetF_P53 <- intensity.data_P53 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_P53 = mean (Intensity), SD_P53 = sd(Intensity))%>% dplyr:::mutate(Het_P53 = SD_P53*SD_P53/Mean_P53)
+
+HetF_RhoA <- intensity.data_RhoA %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_RhoA = mean (Intensity), SD_RhoA = sd(Intensity))%>% dplyr:::mutate(Het_RhoA = SD_RhoA*SD_RhoA/Mean_RhoA)
+
+HetF_Rab7 <- intensity.data_Rab7 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_Rab7 = mean (Intensity), SD_Rab7 = sd(Intensity))%>% dplyr:::mutate(Het_Rab7 = SD_Rab7*SD_Rab7/Mean_Rab7)
+
+HetF_Rpap3 <- intensity.data_Rpap3 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_Rpap3 = mean (Intensity), SD_Rpap3 = sd(Intensity))%>% dplyr:::mutate(Het_Rpap3 = SD_Rpap3*SD_Rpap3/Mean_Rpap3)
+
+HetF_Sec16a <- intensity.data_Sec16a %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_Sec16a = mean (Intensity), SD_Sec16a = sd(Intensity))%>% dplyr:::mutate(Het_Sec16a = SD_Sec16a*SD_Sec16a/Mean_Sec16a)
+
+
+HetF_Slc2a1 <- intensity.data_Slc2a1 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.95) & Intensity > quantile(Intensity, 0.05))%>% dplyr:::summarize ( Mean_Slc2a1 = mean (Intensity), SD_Slc2a1 = sd(Intensity))%>% dplyr:::mutate(Het_Slc2a1 = SD_Slc2a1*SD_Slc2a1/Mean_Slc2a1)
+
+
+# this combined all the calculated heterogeneity by gene name
+
+ HetF_Combined <- HetF_Canx%>%
+  full_join(HetF_Egfr, by = "WellName")%>%
+   full_join(HetF_Nras, by = "WellName")%>%
+  full_join(HetF_Errfi1, by = "WellName")%>%
+  full_join(HetF_Gapdh, by = "WellName")%>%
+  full_join(HetF_Kpnb1, by = "WellName")%>%
+  full_join(HetF_Myc2, by = "WellName")%>%
+  full_join(HetF_P53, by = "WellName")%>%
+  full_join(HetF_Rab7, by = "WellName")%>%
+  full_join(HetF_RhoA, by = "WellName")%>%
+  full_join(HetF_Sec16a, by = "WellName")%>%
+    full_join(HetF_Dnajc5, by = "WellName")%>%
+    full_join(HetF_Rpap3, by = "WellName")%>%
+  full_join(HetF_Slc2a1, by = "WellName")
+ 
+ 
+ Full_Het<- HetF_Combined%>%select("WellName", contains("Het")) %>% dplyr:::rename (Canx= Het_Canx,
+                                                                      Nras=Het_Nras,
+                                                                      Errfi1=Het_Errfi1,
+                                                                      Egfr=Het_Egfr,
+                                                                      Gapdh=Het_Gapdh,
+                                                                      Kpnb1=Het_Kpnb1,
+                                                                      Myc=Het_Myc2,
+                                                                      P53=Het_P53,
+                                                                      Rab7a=Het_Rab7,
+                                                                      RhoA=Het_RhoA,
+                                                                      Dnajc5=Het_Dnajc5,
+                                                                      Rpap3=Het_Rpap3,
+                                                                      Sec16a=Het_Sec16a,
+                                                                      Slc2a1=Het_Slc2a1)
+ 
+ write.csv(Full_Het, "Output/Collated_Het_MCF7_raw_unfiltered.csv", row.names = FALSE)
+ 
+```
+
+                                                                         Checking for outliars and replacing them with NA
+
+              
+
+```{r}
+
+
+
+
+
+Full_Het_b<- read.csv(file = "Output/Collated_Het_MCF7_raw_unfiltered.csv")
+
+
+Full_Het_pivot_b<-pivot_longer(Full_Het_b, c(2:15), names_to = "Genes", values_to = "Het")%>%na.omit
+ggplot(Full_Het_pivot_b, aes(y=Het, color=Genes)) + geom_boxplot()
+
+
+
+
+MCF7_Het_Stat_before<-Full_Het_pivot_b%>%group_by(Genes)%>%dplyr:::summarize(    
+                                                         median = median(Het), 
+                                                         high = quantile(Het, 0.75)+ 5*(quantile(Het, 0.75)- quantile(Het, 0.25 )),max= max(Het),
+                                                         nintynine= quantile(Het, 0.95),
+                                                         five= quantile(Het, 0.05),
+                                                          min = min(Het), 
+                                                         low = quantile(Het, 0.25)- 5*(quantile(Het, 0.75)- quantile(Het, 0.25 )),
+                                                          Mean= mean(Het) )
+
+ Full_Het_b<-Full_Het_b%>%select(c("WellName" ,"Canx", "Dnajc5" , "Egfr" , "Errfi1",  "Gapdh" , "Kpnb1", "Myc" ,  "Nras" ,"P53"  ,    "Rab7a" , "Rpap3"  , "RhoA"   ,  "Sec16a"   ,      "Slc2a1"   ))
+
+
+```
+
+Checking for outliars 
+```{r}
+
+
+Full_Het<- Full_Het_b%>%
+  mutate(Canx = ifelse(Canx>11.4, NA,Canx ))%>%
+  mutate(Dnajc5 = ifelse(Dnajc5>97.9, NA,Dnajc5 ))%>%# 3 times median
+  mutate(Egfr = ifelse(Egfr>15.7, NA,Egfr ))%>%
+  mutate(Errfi1 = ifelse(Errfi1>38.5, NA,Errfi1 ))%>%
+  mutate(Gapdh = ifelse(Gapdh>21, NA,Gapdh ))%>%
+  mutate(Kpnb1 = ifelse(Kpnb1>6.61, NA,Kpnb1 ))%>%
+  mutate(Myc = ifelse(Myc>14.4, NA,Myc ))%>%# previously high 300
+  mutate(Nras = ifelse(Nras>42.4, NA,Nras ))%>%
+  mutate(P53 = ifelse(P53>5.37, NA,P53 ))%>%
+  mutate(Rab7a = ifelse(Rab7a>12.2, NA,Rab7a ))%>%
+  mutate(RhoA = ifelse(RhoA>7.32, NA,RhoA ))%>%
+  mutate(Rpap3 = ifelse(Rpap3>2.29, NA,Rpap3 ))%>%
+  mutate(Sec16a = ifelse(Sec16a>14.7, NA,Sec16a ))%>%
+  mutate(Slc2a1 = ifelse(Slc2a1>26.7, NA,Slc2a1 ))
+
+
+
+
+Full_Het_pivot<-pivot_longer(Full_Het, c(2:15), names_to = "Genes", values_to = "Het")%>%na.omit
+MCF7_Het_Stat_after<- Full_Het_pivot%>%group_by(Genes)%>%dplyr:::summarize(    
+                                                         median = median(Het), 
+                                                         high = quantile(Het, 0.75)+ 5*(quantile(Het, 0.75)- quantile(Het, 0.25 )),max= max(Het),
+                                                         nintynine= quantile(Het, 0.95),
+                                                         five= quantile(Het, 0.05),
+                                                          min = min(Het), 
+                                                         low = quantile(Het, 0.25)- 5*(quantile(Het, 0.75)- quantile(Het, 0.25 )),
+                                                          Mean= mean(Het) )
+ggplot(Full_Het_pivot, aes(y=Het, color=Genes)) + geom_boxplot()
+
+MCF7_Het_Stat_bf <- cbind(MCF7_Het_Stat_before, MCF7_Het_Stat_after)
+write.csv(MCF7_Het_Stat_bf, "Output/MCF7_Het_Stat_beforeAndAfter.csv")
+  
+ Full_Het<-Full_Het%>%select(c("WellName" ,"Canx", "Dnajc5" , "Egfr" , "Errfi1",  "Gapdh" , "Kpnb1", "Myc" ,  "Nras" ,"P53"  ,    "Rab7a" , "Rpap3"  , "RhoA"   ,  "Sec16a"   ,      "Slc2a1"   ))
+
+colnames(Full_Het)
+
+
+```
+
+
+Generating the files for export
+- Full join the Full_mean with rep1 , rep2 and untreated wells names "replicates_average_M"
+- Putting the replicates side by side and calculating the mean of the treated
+- Calculating the mean median mode of the untreated and exporting the file 
+
+
+
+```{r}
+
+
+
+#### Reading the Replicates and Untreated well names for fishinmg out heterogeneity
+
+Replicate1_H<- read.csv(file = 'Metadata/Replicate1.csv')
+Replicate2_H<- read.csv(file = 'Metadata/Replicate2.csv')
+Untreated<- read.csv(file = 'Metadata/Untreated.csv')
+
+
+
+
+Replicate1_H_Data<-Replicate1_H%>%left_join(Full_Het, by = "WellName")
+Replicate2_H_Data<-Replicate2_H%>%left_join(Full_Het, by = "WellName")
+Untreated_Data<-Untreated%>%left_join(Full_Het, by = "WellName")
+
+
+write.csv(Untreated_Data, "Output/MCF7_Het_Untreated.csv")
+
+
+
+### printing the heterogeneity side by side
+
+Side_By_side_MCF7<-cbind(Replicate1_H_Data[c(1,2)], Replicate2_H_Data[c(2,1)], 
+            Replicate1_H_Data[c(1,3)], Replicate2_H_Data[c(3,1)],
+            Replicate1_H_Data[c(1,4)], Replicate2_H_Data[c(4,1)],
+            Replicate1_H_Data[c(1,5)], Replicate2_H_Data[c(5,1)],
+            Replicate1_H_Data[c(1,6)], Replicate2_H_Data[c(6,1)],
+            Replicate1_H_Data[c(1,7)], Replicate2_H_Data[c(7,1)],
+            Replicate1_H_Data[c(1,8)], Replicate2_H_Data[c(8,1)],
+            Replicate1_H_Data[c(1,9)], Replicate2_H_Data[c(9,1)],
+            Replicate1_H_Data[c(1,10)], Replicate2_H_Data[c(10,1)],
+            Replicate1_H_Data[c(1,11)], Replicate2_H_Data[c(11,1)],
+            Replicate1_H_Data[c(1,12)], Replicate2_H_Data[c(12,1)],
+            Replicate1_H_Data[c(1,13)], Replicate2_H_Data[c(13,1)],
+            Replicate1_H_Data[c(1,14)], Replicate2_H_Data[c(14,1)],
+            Replicate1_H_Data[c(1,15)], Replicate2_H_Data[c(15,1)]
+            )
+colnames(Side_By_side_MCF7)
+# getting the values of the Het
+replicates_het<-Side_By_side_MCF7[c(1,4,2,3,6,7,10,11,14,15,18,19,22,23,26,27,30,31,34,35,38,39,42,43, 46,47, 50,51, 54,55)]
+colnames(replicates_het)
+
+
+
+
+#Taking the mean of replicates
+
+replicates_average_het<-replicates_het%>%
+  mutate(Canx_H = rowMeans((.[,3:4]) ,na.rm=TRUE))%>%
+  mutate(Dnajc5_H = rowMeans((.[,5:6]) ,na.rm=TRUE))%>%
+  mutate(Egfr_H = rowMeans((.[,7:8]) ,na.rm=TRUE))%>%
+  mutate(Errfi1_H = rowMeans((.[,9:10]) ,na.rm=TRUE))%>%
+  mutate(Gapdh_H = rowMeans((.[,11:12]) ,na.rm=TRUE))%>%
+  mutate(Kpnb1_H = rowMeans((.[,13:14]) ,na.rm=TRUE))%>%
+  mutate(Myc_H = rowMeans((.[,15:16]) ,na.rm=TRUE))%>%
+   mutate(Nras_H = rowMeans((.[,17:18]) ,na.rm=TRUE))%>%
+  mutate(P53_H = rowMeans((.[,19:20]) ,na.rm=TRUE))%>%
+  mutate(Rab7a_H = rowMeans((.[,21:22]) ,na.rm=TRUE))%>%
+  mutate(Rpap3_H = rowMeans((.[,23:24]) ,na.rm=TRUE))%>%
+  mutate(RhoA_H = rowMeans((.[,25:26]) ,na.rm=TRUE))%>%
+  mutate(Sec16a_H = rowMeans((.[,27:28]) ,na.rm=TRUE))%>%
+  mutate(Slc2a1_H = rowMeans((.[,29:30]) ,na.rm=TRUE))
+
+#subsetting the _H entries only
+replicates_average_het<-replicates_average_het%>%select(c(1,2) , contains("_H", ignore.case = TRUE, vars = NULL) )  # change it to include Well name
+
+colnames(replicates_average_het)
+
+#### at this point i check the mean and median
+
+Mean_Untreated_het<-colMeans(Untreated_Data[sapply(Untreated_Data, is.numeric)], na.rm = TRUE)
+test<- Untreated_Data[sapply(Untreated_Data, is.numeric)]
+Median_Untreated_het<-apply(test,2,median,na.rm = TRUE)
+SD_Untreated_Het<-apply(test,2,sd,na.rm = TRUE)
+Mean_Untreated_het
+Median_Untreated_het
+SD_Untreated_Het
+Untreated_Mean_Median_SD<- cbind(Mean_Untreated_het,Median_Untreated_het, SD_Untreated_Het )
+write.csv(Untreated_Mean_Median_SD, "Output/MCF7_Het_Untreated_Mean_Median_SD.csv")
+```
+
+Generating the files for export
+
+- Normalizing the values with "Mean" of untreated for both replicates and average
+- exporting the final file with compound name and treated average
+
+
+```{r}
+
+
+replicates_average_het_normalized<-replicates_average_het%>%
+  mutate(Canx_H= Canx_H/4.5 )%>%
+  mutate(Dnajc5_H= Dnajc5_H/7.77 )%>%
+  mutate(Egfr_H= Egfr_H/4.15 )%>%     
+  mutate(Errfi1_H= Errfi1_H/11.33 )%>%  
+  mutate(Gapdh_H= Gapdh_H/8.14 )%>%
+  mutate(Kpnb1_H= Kpnb1_H/2.66 )%>%
+  mutate(Myc_H= Myc_H/4.35 )%>% 
+  mutate(Nras_H= Nras_H/3.6 )%>%
+  mutate(P53_H= P53_H/2.37 )%>%  
+  mutate(Rab7a_H= Rab7a_H/4.69 )%>%
+  mutate(Rpap3_H= Rpap3_H/1.34 )%>%
+  mutate(RhoA_H= RhoA_H/3.18 )%>%
+  mutate(Sec16a_H= Sec16a_H/5.22 )%>%
+  mutate(Slc2a1_H= Slc2a1_H/10.261 )
+
+
+
+
+Replicate1_H_Data_het_normalized<-Replicate1_H_Data%>%
+  mutate(Canx= Canx/4.5 )%>%
+  mutate(Dnajc5= Dnajc5/7.77 )%>%
+  mutate(Egfr= Egfr/4.15 )%>%     
+  mutate(Errfi1= Errfi1/11.33 )%>%  
+  mutate(Gapdh= Gapdh/8.14 )%>%
+  mutate(Kpnb1= Kpnb1/2.66 )%>%
+  mutate(Myc= Myc/4.35 )%>% 
+  mutate(Nras= Nras/3.6 )%>%
+  mutate(P53= P53/2.37 )%>%  
+  mutate(Rab7a= Rab7a/4.69 )%>%
+  mutate(Rpap3= Rpap3/1.34 )%>%
+  mutate(RhoA= RhoA/3.18 )%>%
+  mutate(Sec16a= Sec16a/5.22 )%>%
+  mutate(Slc2a1= Slc2a1/10.261 )
+
+
+
+
+
+
+Replicate2_H_Data_het_normalized<-Replicate2_H_Data%>%
+  mutate(Canx= Canx/4.5 )%>%
+  mutate(Dnajc5= Dnajc5/7.77 )%>%
+  mutate(Egfr= Egfr/4.15 )%>%     
+  mutate(Errfi1= Errfi1/11.33 )%>%  
+  mutate(Gapdh= Gapdh/8.14 )%>%
+  mutate(Kpnb1= Kpnb1/2.66 )%>%
+  mutate(Myc= Myc/4.35 )%>% 
+  mutate(Nras= Nras/3.6 )%>%
+  mutate(P53= P53/2.37 )%>%  
+  mutate(Rab7a= Rab7a/4.69 )%>%
+  mutate(Rpap3= Rpap3/1.34 )%>%
+  mutate(RhoA= RhoA/3.18 )%>%
+  mutate(Sec16a= Sec16a/5.22 )%>%
+  mutate(Slc2a1= Slc2a1/10.261 )
+
+
+# renaming the columns
+
+  colname<-colnames(replicates_average_het_normalized)
+  colname[1:2]<-c("WellName_R1", "WellName_R2")
+  colnames(replicates_average_het_normalized)<-colname
+  
+
+  
+
+# using the existing list from xls attaching the compund name to the het data next to the well data 
+
+WellNameCompound<- read.csv(file = 'Metadata/WellNameCompound.csv')
+colnames(WellNameCompound)
+colnames(replicates_average_het_normalized)
+replicates_average_het_normalized_compounds<- replicates_average_het_normalized%>%full_join(WellNameCompound, by = "WellName_R1")
+
+
+
+
+
+
+
+# Exporting the file for heat map and analysis
+
+
+write.csv(replicates_average_het_normalized_compounds, "Output/MCF7_Het.csv", row.names=FALSE)
+
+write.csv(Replicate1_H_Data_het_normalized, "Output/MCF7_Het_Replicate1.csv", row.names=FALSE)
+write.csv(Replicate2_H_Data_het_normalized, "Output/MCF7_Het_Replicate2.csv", row.names=FALSE)
+
+
+
+```
+
+Input: MCF7_Het.csv 
+Output: CSV file with line 22 and 98 removed and compounds class added to the data 
+
+```{r}
+data1 <- read.csv("Output/MCF7_Het.csv", comment.char="#")
+
+
+class_compound<- read.csv("Metadata/Epi_Data_HBEC_Class.csv")
+class_compound<-class_compound[c(1,2)] 
+data1 <-data1%>% filter(!row_number() %in% c(22,98))    # removing the blank column separately 
+class_compound <-class_compound%>% filter(!row_number() %in% c(22,98)) # removing the blank column separately 
+data1<-cbind( class_compound,data1 ) # was not able to remoce row 22 and 98 after combining
+ # removing the second reduntant compound column 19
+
+data1<- data1[-c(19)]
+colnames(data1)
+sorted_class<-data1[with(data1, order(Class, Compound)),]
+colnames(sorted_class)
+write.csv(sorted_class, "Output/MCF7_Het_Class_Sorted_22_98-removed.csv", row.names = FALSE)
+sum(is.na(sorted_class))
+```
+
+
+Using this module for the final figure. 
+
+Input: MCF7_Freq.csv file from line 706 that has NA changed to "20"
+Output: Heat map with 
+        a. Sorted compound
+        b. ascending gene order
+        c NA is while
+        
+
+```{r}
+
+
+
+sorted_class <- read.csv("Output/MCF7_Het_Class_Sorted_22_98-removed.csv", comment.char="#")# row 22 already removed
+colnames(sorted_class)
+rnames <- sorted_class[,2]                            # assign labels in column 1 to "rnames"
+mat_data <- data.matrix(sorted_class[,5:18])  # transform column 3-5 into a matrix
+rownames(mat_data) <- rnames  
+#print(head(mat_data))
+
+
+my_palette <- colorRampPalette(c("red", "cornsilk", "blue"))(n = 299)
+
+col_breaks = c(seq(.001,0.5,length=100),  # for red
+               seq(0.51,1.5,length=100),           # for yellow
+               seq(1.51,3,length=100))             # for green
+
+
+
+heatmap.2(mat_data, 
+           lhei = c(3,14),
+           main = "MCF7_Het",
+           margin=c(10,12),
+          cexRow = .2,
+           col= my_palette,
+           breaks = col_breaks,
+           trace = "none",
+           dendrogram="none",
+          density.info="none",
+          
+          Colv=FALSE, Rowv=FALSE)# for non clustered heat map
+
+
+
+```
+
+
+

@@ -1,0 +1,703 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(readr)
+library (dplyr)
+library(ggplot2)
+library(plyr)
+library(tidyverse)
+library(knitr)
+library(SpatialTools)
+library(reshape2)
+library(data.table)
+library(tidyr)
+library(RColorBrewer)
+library(gplots)
+```
+                                Gathering data
+
+- This will read all the experiments in different datatable and get spot intensity distribution
+- Data for rab7a and slc2a1 , rpap3 and sec16a was imaged form the same plate but in two experiment files as the plate orientation was flipped in the initial imaging
+
+```{r}
+pat<- "*Spots 488*"
+
+paths_Slc2a1 <- dir (path = "Data/Slc2a1/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Slc2a1) <- basename(paths_Slc2a1)
+total.data_Slc2a1 <-ldply (paths_Slc2a1, fread , sep = "\t")
+intensity.data_Slc2a1 <- total.data_Slc2a1[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Slc2a1,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+paths_Canx <- dir (path = "Data/Canx/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Canx) <- basename(paths_Canx)
+total.data_Canx <-ldply (paths_Canx, fread , sep = "\t")
+intensity.data_Canx <- total.data_Canx[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Canx,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+paths_Errfi1 <- dir (path = "Data/Errfi1/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Errfi1) <- basename(paths_Errfi1)
+total.data_Errfi1 <-ldply (paths_Errfi1, fread , sep = "\t")
+intensity.data_Errfi1 <- total.data_Errfi1[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Errfi1,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+paths_Rab7a <- dir (path = "Data/Rab7a/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Rab7a) <- basename(paths_Rab7a)
+total.data_Rab7a <-ldply (paths_Rab7a, fread , sep = "\t")
+intensity.data_Rab7a <- total.data_Rab7a[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Rab7a,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+
+
+paths_Dnajc5 <- dir (path = "Data/Dnajc5/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Dnajc5) <- basename(paths_Dnajc5)
+total.data_Dnajc5 <-ldply (paths_Dnajc5, fread , sep = "\t")
+intensity.data_Dnajc5 <- total.data_Dnajc5[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Dnajc5,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+paths_GAPDH <- dir (path = "Data/GAPDH/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_GAPDH) <- basename(paths_GAPDH)
+total.data_GAPDH <-ldply (paths_GAPDH, fread , sep = "\t")
+intensity.data_GAPDH <- total.data_GAPDH[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_GAPDH,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+
+
+
+paths_RhoA <- dir (path = "Data/RhoA/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_RhoA) <- basename(paths_RhoA)
+total.data_RhoA <-ldply (paths_RhoA, fread , sep = "\t")
+intensity.data_RhoA <- total.data_RhoA[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_RhoA,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+paths_Rpap3 <- dir (path = "Data/Rpap3/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Rpap3) <- basename(paths_Rpap3)
+total.data_Rpap3 <-ldply (paths_Rpap3, fread , sep = "\t")
+intensity.data_Rpap3 <- total.data_Rpap3[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Rpap3,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+paths_Myc <- dir (path = "Data/Myc/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Myc) <- basename(paths_Myc)
+total.data_Myc <-ldply (paths_Myc, fread , sep = "\t")
+intensity.data_Myc <- total.data_Myc[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Myc,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+paths_Sec16a <- dir (path = "Data/Sec16a/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Sec16a) <- basename(paths_Sec16a)
+total.data_Sec16a <-ldply (paths_Sec16a, fread , sep = "\t")
+intensity.data_Sec16a <- total.data_Sec16a[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Sec16a,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+paths_Kpnb1 <- dir (path = "Data/Kpnb1/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Kpnb1) <- basename(paths_Kpnb1)
+total.data_Kpnb1 <-ldply (paths_Kpnb1, fread , sep = "\t")
+intensity.data_Kpnb1 <- total.data_Kpnb1[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Kpnb1,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+paths_egfr <- dir (path = "Data/egfr/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_egfr) <- basename(paths_egfr)
+total.data_egfr <-ldply (paths_egfr, fread , sep = "\t")
+intensity.data_egfr <- total.data_egfr[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_egfr,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+paths_nras <- dir (path = "Data/nras/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_nras) <- basename(paths_nras)
+total.data_nras <-ldply (paths_nras, fread , sep = "\t")
+intensity.data_nras <- total.data_nras[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_nras,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+paths_P53 <- dir (path = "Data/P53/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_P53) <- basename(paths_P53)
+total.data_P53 <-ldply (paths_P53, fread , sep = "\t")
+intensity.data_P53 <- total.data_P53[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_P53,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+################## left overs######### as they were flipped
+
+
+paths_Sec16a_left_over <- dir (path = "Data/Sec16a_left_over/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Sec16a_left_over) <- basename(paths_Sec16a_left_over)
+total.data_Sec16a_left_over <-ldply (paths_Sec16a_left_over, fread , sep = "\t")
+intensity.data_Sec16a_left_over <- total.data_Sec16a_left_over[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Sec16a_left_over,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+paths_Rpap3_left_over <- dir (path = "Data/Rpap3_left_over/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Rpap3_left_over) <- basename(paths_Rpap3_left_over)
+total.data_Rpap3_left_over <-ldply (paths_Rpap3_left_over, fread , sep = "\t")
+intensity.data_Rpap3_left_over <- total.data_Rpap3_left_over[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Rpap3_left_over,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+paths_Slc2a1_left_over <- dir (path = "Data/Slc2a1_left_over/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Slc2a1_left_over) <- basename(paths_Slc2a1_left_over)
+total.data_Slc2a1_left_over <-ldply (paths_Slc2a1_left_over, fread , sep = "\t")
+intensity.data_Slc2a1_left_over <- total.data_Slc2a1_left_over[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Slc2a1_left_over,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+
+
+
+paths_Rab7a_left_over <- dir (path = "Data/Rab7a_left_over/", pattern = pat, full.names = TRUE, recursive = TRUE) 
+names(paths_Rab7a_left_over) <- basename(paths_Rab7a_left_over)
+total.data_Rab7a_left_over <-ldply (paths_Rab7a_left_over, fread , sep = "\t")
+intensity.data_Rab7a_left_over <- total.data_Rab7a_left_over[c("WellName", "Spots 488 - Corrected Spot Intensity")]
+setnames(intensity.data_Rab7a_left_over,"Spots 488 - Corrected Spot Intensity" , "Intensity" )
+ 
+```
+
+- Calculating the mean , SD and Int for all and combining them all in one file  
+
+
+
+```{r}
+Int_Errfi1 <- intensity.data_Errfi1 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_Errfi1 = mean (Intensity), SD_Errfi1 = sd(Intensity))%>% dplyr:::mutate(Int_Errfi1 = SD_Errfi1*SD_Errfi1/Mean_Errfi1)
+
+
+Int_Canx <- intensity.data_Canx %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_Canx = mean (Intensity), SD_Canx = sd(Intensity))%>% dplyr:::mutate(Int_Canx = SD_Canx*SD_Canx/Mean_Canx)
+
+
+
+  
+
+Int_egfr <- intensity.data_egfr %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_egfr = mean (Intensity), SD_egfr = sd(Intensity))%>% dplyr:::mutate(Int_egfr = SD_egfr*SD_egfr/Mean_egfr)
+
+Int_GAPDH <- intensity.data_GAPDH %>% 
+  as_tibble%>% 
+  group_by(WellName)%>%filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>% dplyr:::summarize ( Mean_GAPDH = mean (Intensity), SD_GAPDH = sd(Intensity))%>% dplyr:::mutate(Int_GAPDH = SD_GAPDH*SD_GAPDH/Mean_GAPDH)
+
+
+Int_Kpnb1 <- intensity.data_Kpnb1 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>%filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>% dplyr:::summarize ( Mean_Kpnb1 = mean (Intensity), SD_Kpnb1 = sd(Intensity))%>% dplyr:::mutate(Int_Kpnb1 = SD_Kpnb1*SD_Kpnb1/Mean_Kpnb1)
+
+Int_Myc <- intensity.data_Myc %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_Myc = mean (Intensity), SD_Myc = sd(Intensity))%>% dplyr:::mutate(Int_Myc = SD_Myc*SD_Myc/Mean_Myc)
+
+
+Int_P53 <- intensity.data_P53 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_P53 = mean (Intensity), SD_P53 = sd(Intensity))%>% dplyr:::mutate(Int_P53 = SD_P53*SD_P53/Mean_P53)
+
+Int_RhoA <- intensity.data_RhoA %>% 
+  as_tibble%>% 
+  group_by(WellName)%>%filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>% dplyr:::summarize ( Mean_RhoA = mean (Intensity), SD_RhoA = sd(Intensity))%>% dplyr:::mutate(Int_RhoA = SD_RhoA*SD_RhoA/Mean_RhoA)
+
+
+
+Int_Sec16a <- intensity.data_Sec16a %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_Sec16a = mean (Intensity), SD_Sec16a = sd(Intensity))%>% dplyr:::mutate(Int_Sec16a = SD_Sec16a*SD_Sec16a/Mean_Sec16a)
+
+
+Int_Slc2a1 <- intensity.data_Slc2a1 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>%filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>% dplyr:::summarize ( Mean_Slc2a1 = mean (Intensity), SD_Slc2a1 = sd(Intensity))%>% dplyr:::mutate(Int_Slc2a1 = SD_Slc2a1*SD_Slc2a1/Mean_Slc2a1)
+
+
+
+
+
+
+ Int_nras <- intensity.data_nras %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_nras = mean (Intensity), SD_nras = sd(Intensity))%>% dplyr:::mutate(Int_nras = SD_nras*SD_nras/Mean_nras)
+ 
+ Int_Dnajc5 <- intensity.data_Dnajc5 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_Dnajc5 = mean (Intensity), SD_Dnajc5 = sd(Intensity))%>% dplyr:::mutate(Int_Dnajc5 = SD_Dnajc5*SD_Dnajc5/Mean_Dnajc5)
+
+ Int_Rab7a <- intensity.data_Rab7a %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_Rab7a = mean (Intensity), SD_Rab7a = sd(Intensity))%>% dplyr:::mutate(Int_Rab7a = SD_Rab7a*SD_Rab7a/Mean_Rab7a)
+
+ Int_Rpap3 <- intensity.data_Rpap3 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_Rpap3 = mean (Intensity), SD_Rpap3 = sd(Intensity))%>% dplyr:::mutate(Int_Rpap3 = SD_Rpap3*SD_Rpap3/Mean_Rpap3)
+ 
+ 
+Int_Slc2a1 <- intensity.data_Slc2a1 %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_Slc2a1 = mean (Intensity), SD_Slc2a1 = sd(Intensity))%>% dplyr:::mutate(Int_Slc2a1 = SD_Slc2a1*SD_Slc2a1/Mean_Slc2a1)
+
+################## left overs######### as they were flipped
+
+
+Int_Slc2a1_left_over <- intensity.data_Slc2a1_left_over %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_Slc2a1_left_over = mean (Intensity), SD_Slc2a1_left_over = sd(Intensity))%>% dplyr:::mutate(Int_Slc2a1_left_over = SD_Slc2a1_left_over*SD_Slc2a1_left_over/Mean_Slc2a1_left_over)
+
+
+
+Int_Rab7a_left_over <- intensity.data_Rab7a_left_over %>% 
+  as_tibble%>% 
+  group_by(WellName)%>%filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>% dplyr:::summarize ( Mean_Rab7a_left_over = mean (Intensity), SD_Rab7a_left_over = sd(Intensity))%>% dplyr:::mutate(Int_Rab7a_left_over = SD_Rab7a_left_over*SD_Rab7a_left_over/Mean_Rab7a_left_over)
+
+Int_Rpap3_left_over <- intensity.data_Rpap3_left_over %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_Rpap3_left_over = mean (Intensity), SD_Rpap3_left_over = sd(Intensity))%>% dplyr:::mutate(Int_Rpap3_left_over = SD_Rpap3_left_over*SD_Rpap3_left_over/Mean_Rpap3_left_over)
+
+Int_Sec16a_left_over <- intensity.data_Sec16a_left_over %>% 
+  as_tibble%>% 
+  group_by(WellName)%>% filter( Intensity < quantile(Intensity, 0.99) & Intensity > quantile(Intensity, 0.01))%>%dplyr:::summarize ( Mean_Sec16a_left_over = mean (Intensity), SD_Sec16a_left_over = sd(Intensity))%>% dplyr:::mutate(Int_Sec16a_left_over = SD_Sec16a_left_over*SD_Sec16a_left_over/Mean_Sec16a_left_over)
+
+
+
+
+
+# combing the flipped and non flipped data. This is mostly for the non flipped data processing later 1. Combining the data. 2. Renaming the Int Columns and selecting the Int Columns
+
+ 
+ Int_Combined_by_wellname <- Int_Canx%>%
+  full_join(Int_egfr, by = "WellName")%>%
+  full_join(Int_Errfi1, by = "WellName")%>%
+  full_join(Int_GAPDH, by = "WellName")%>%
+  full_join(Int_Kpnb1, by = "WellName")%>%
+  full_join(Int_Myc, by = "WellName")%>%
+  full_join(Int_P53, by = "WellName")%>%
+  full_join(Int_Rab7a, by = "WellName")%>%
+   full_join(Int_Rab7a_left_over, by = "WellName")%>%
+   full_join(Int_Sec16a_left_over, by = "WellName")%>%
+   full_join(Int_Rpap3_left_over, by = "WellName")%>%
+  full_join(Int_RhoA, by = "WellName")%>%
+  full_join(Int_Sec16a, by = "WellName")%>%
+  full_join(Int_nras, by = "WellName")%>%
+   full_join(Int_Dnajc5, by = "WellName")%>%
+   full_join(Int_Rpap3, by = "WellName")%>%
+  full_join(Int_Slc2a1, by = "WellName")%>%
+ full_join(Int_Slc2a1_left_over, by = "WellName")
+ 
+ Mean_Combined_by_wellname<-Int_Combined_by_wellname
+```
+
+
+
+Take the mean of the intensity
+
+```{r}
+Two_column_Mean_combined<- Mean_Combined_by_wellname%>%select(WellName, contains("Mean")) %>% dplyr:::rename (Canx= Mean_Canx,
+                                                                      Errfi1=Mean_Errfi1,
+                                                                      Egfr=Mean_egfr,
+                                                                      Gapdh=Mean_GAPDH,
+                                                                      Kpnb1=Mean_Kpnb1,
+                                                                      Myc=Mean_Myc,
+                                                                      P53=Mean_P53,
+                                                                      Rab7a=Mean_Rab7a,
+                                                                      Rpap3_left_over=Mean_Rpap3_left_over,
+                                                                      Sec16a_left_over=Mean_Sec16a_left_over,
+                                                                      Rab7a_left_over=Mean_Rab7a_left_over,
+                                                                      Slc2a1_left_over=Mean_Slc2a1_left_over,
+                                                                      RhoA=Mean_RhoA,
+                                                                      Sec16a=Mean_Sec16a,
+                                                                      NRAS = Mean_nras,
+                                                                      Dnajc5=Mean_Dnajc5,
+                                                                      Slc2a1=Mean_Slc2a1,
+                                                                      Rpap3=Mean_Rpap3)
+
+
+colnames(Two_column_Mean_combined)
+
+Non_flipped_Mean12<-Two_column_Mean_combined[c(1,2,3,4,5,6,7,8,13,15,16)]
+```
+
+
+
+Correcting the well names for the genes Rab7a, Slc2a1, Rpap3 and Sec16a
+a. Use the mean frequency file of above genes to join with  "wellnames", which were actually flipped
+b. Rename the fliped well names to correct "Wellnames" (the actual correct orientation wellnames) and join rest of imaging  the "left over" 
+c. Combine data for all the genes
+
+```{r}
+
+
+
+
+template<- read.csv(file = "Metadata/Orginal_Flipped.csv")
+
+Mean_Combined_by_wellname_flipped <- template%>%full_join(Int_Rab7a, by = "WellName")%>%
+full_join(Int_Slc2a1, by = "WellName")%>%
+full_join(Int_Sec16a, by = "WellName")%>%
+full_join(Int_Rpap3, by = "WellName")
+
+
+
+colnames(Mean_Combined_by_wellname_flipped)[c(1:2)]<-c("Original", "WellName")
+ 
+
+ Mean_Combined_by_wellname_flipped_all<- Mean_Combined_by_wellname_flipped %>%
+   full_join(Int_Rab7a_left_over, by = "WellName")%>%
+   full_join(Int_Sec16a_left_over, by = "WellName")%>%
+   full_join(Int_Rpap3_left_over, by = "WellName")%>%
+   full_join(Int_Slc2a1_left_over, by = "WellName")%>%select(c(1:2),contains("Mean") )
+ 
+colnames(Mean_Combined_by_wellname_flipped_all)
+ 
+ 
+Mean_Combined_by_wellname_flipped_all<- Mean_Combined_by_wellname_flipped_all%>%
+  mutate(Rab7s_final= rowMeans((.[,c(3,7)]) ,na.rm=TRUE))%>%
+   mutate(Slc2a1_final= rowMeans((.[,c(4,10)]) ,na.rm=TRUE))%>%
+   mutate(Sec16a_final= rowMeans((.[,c(5,8)]) ,na.rm=TRUE))%>%
+   mutate(Rpap3_final= rowMeans((.[,c(6,9)]) ,na.rm=TRUE))%>%
+  select(c(1:2),contains("Final") )
+colnames(Mean_Combined_by_wellname_flipped_all)[c(3:6)]<-c ("Rab7a", "Slc2a1", "Sec16a", "Rpap3")
+Mean_Combined_by_wellname_flipped_all<-Mean_Combined_by_wellname_flipped_all[c(-1)]
+
+# joining flipped and non flipped
+
+Full_Mean<- Non_flipped_Mean12%>% full_join(Mean_Combined_by_wellname_flipped_all, by = "WellName")
+
+
+write.csv(Full_Mean, "Output/Collated_Int_HBEC_raw_unfiltered.csv", row.names = FALSE)
+
+sum(is.na(Full_Mean))
+
+```
+
+Checking for outliars 
+
+                 
+```{r}
+
+
+Full_Mean_b<- read.csv(file = "Output/Collated_Int_HBEC_raw_unfiltered.csv")
+
+sum(is.na(Full_Mean_b))
+
+
+Full_Mean_pivot_b<-pivot_longer(Full_Mean_b, c(2:15), names_to = "Genes", values_to = "Mean")%>%na.omit
+ggplot(Full_Mean_pivot_b, aes(y=Mean, color=Genes)) + geom_boxplot()
+
+
+HBEC_Mean_Stat_before<- Full_Mean_pivot_b%>%group_by(Genes)%>%dplyr:::summarize(    
+                                                         median = median(Mean), 
+                                                         high = quantile(Mean, 0.75)+ 5*(quantile(Mean, 0.75)- quantile(Mean, 0.25 )),
+                                                         nintynine= quantile(Mean, 0.95),
+                                                         five= quantile(Mean, 0.05),
+                                                         max= max(Mean), min = min(Mean), 
+                                                         low = quantile(Mean, 0.25)- 5*(quantile(Mean, 0.75)- quantile(Mean, 0.25 )),
+                                                          mean= mean(Mean) )
+# converting the number to NA where the value are 3 times more than the media, use the rannge obatined above 244 gapdh
+
+Full_Mean<- Full_Mean_b%>%
+  mutate(NRAS = ifelse(NRAS>122, NA,NRAS ))%>%
+    mutate(P53 = ifelse(P53>135, NA,P53 ))%>%
+   mutate(Rab7a = ifelse(Rab7a>271, NA,Rab7a ))%>%
+  mutate(Sec16a = ifelse(Sec16a>135, NA,Sec16a ))
+   
+
+sum(is.na(Full_Mean))
+ 
+  
+  Full_Mean<-Full_Mean%>%select(c("WellName" ,"Canx", "Dnajc5" , "Egfr" , "Errfi1",  "Gapdh" , "Kpnb1", "Myc" ,  "NRAS" ,"P53"  ,    "Rab7a" , "Rpap3"  , "RhoA"   ,  "Sec16a"   ,      "Slc2a1"   ))
+  colnames(Full_Mean)[c(9)]<-"Nras"
+  
+  
+ HBEC_Mean_Stat_after<-Full_Mean_pivot%>%group_by(Genes)%>%dplyr:::summarize(    
+                                                         median = median(Mean), 
+                                                         high = quantile(Mean, 0.75)+ 5*(quantile(Mean, 0.75)- quantile(Mean, 0.25 )),max= max(Mean),
+                                                         nintynine= quantile(Mean, 0.95),
+                                                         five= quantile(Mean, 0.05),
+                                                          min = min(Mean), 
+                                                         low = quantile(Mean, 0.25)- 5*(quantile(Mean, 0.75)- quantile(Mean, 0.25 )),
+                                                          Mean= mean(Mean) )
+  
+  
+  
+
+  
+  
+# rearranging
+  
+ 
+  colnames(Full_Mean) 
+
+
+#Full_Int_pivot<-Full_Int[c(-1)]# to chek the spread before and after the filteration
+Full_Mean_pivot<-pivot_longer(Full_Mean, c(2:15), names_to = "Genes", values_to = "Mean")%>%na.omit
+ggplot(Full_Mean_pivot, aes(y=Mean, color=Genes)) + geom_boxplot()
+
+
+HBEC_Mean_Stat_bf <- cbind(HBEC_Mean_Stat_before, HBEC_Mean_Stat_after)
+
+write.csv(HBEC_Mean_Stat_bf, "Output/HBEC_Int_Stat_beforeAndAfter.csv")
+
+
+```
+
+                            Generating the files for export
+- Full join the Full_mean with rep1 , rep2 and untreated wells names "replicates_average_M"
+- Putting the replicates side by side and calculating the mean of the treated
+- Calculating the mean median mode of the untreated and exporting the file
+
+```{r}
+#### Reading the Replicates and Untreated well names for fishinmg out Interogeneity
+
+Replicate1<- read.csv(file = 'Metadata/Replicate1.csv')
+Replicate2<- read.csv(file = 'Metadata/Replicate2.csv')
+Untreated<- read.csv(file = 'Metadata/Untreated.csv')
+
+##### Exporting the replicate and untreated data
+
+Replicate1_Data<-Replicate1%>%left_join(Full_Mean, by = "WellName")
+Replicate2_Data<-Replicate2%>%left_join(Full_Mean, by = "WellName")
+Untreated_Data<-Untreated%>%left_join(Full_Mean, by = "WellName")
+
+
+ 
+write.csv(Untreated_Data, "Output/HBEC_Int_Untreated.csv", row.names=FALSE)
+
+
+
+### printing the Int side by side
+
+Side_By_side_HBEC<-cbind(Replicate1_Data[c(1,2)], Replicate2_Data[c(2,1)], 
+            Replicate1_Data[c(1,3)], Replicate2_Data[c(3,1)],
+            Replicate1_Data[c(1,4)], Replicate2_Data[c(4,1)],
+            Replicate1_Data[c(1,5)], Replicate2_Data[c(5,1)],
+            Replicate1_Data[c(1,6)], Replicate2_Data[c(6,1)],
+            Replicate1_Data[c(1,7)], Replicate2_Data[c(7,1)],
+            Replicate1_Data[c(1,8)], Replicate2_Data[c(8,1)],
+            Replicate1_Data[c(1,9)], Replicate2_Data[c(9,1)],
+            Replicate1_Data[c(1,10)], Replicate2_Data[c(10,1)],
+            Replicate1_Data[c(1,11)], Replicate2_Data[c(11,1)],
+            Replicate1_Data[c(1,12)], Replicate2_Data[c(12,1)],
+            Replicate1_Data[c(1,13)], Replicate2_Data[c(13,1)],
+            Replicate1_Data[c(1,14)], Replicate2_Data[c(14,1)],
+            Replicate1_Data[c(1,15)], Replicate2_Data[c(15,1)]
+            )
+colnames(Side_By_side_HBEC)
+# getting the values of the Int
+replicates_M<-Side_By_side_HBEC[c(1,4,2,3,6,7,10,11,14,15,18,19,22,23,26,27,30,31,34,35,38,39,42,43, 46,47, 50,51, 54,55)]
+colnames(replicates_M)
+
+#Taking the mean of replicates
+
+
+replicates_average_M<-replicates_M%>%
+  mutate(Canx_I = rowMeans((.[,3:4]) ,na.rm=TRUE))%>%
+  mutate(Dnajc5_I = rowMeans((.[,5:6]) ,na.rm=TRUE))%>%
+  mutate(Egfr_I = rowMeans((.[,7:8]) ,na.rm=TRUE))%>%
+  mutate(Errfi1_I = rowMeans((.[,9:10]) ,na.rm=TRUE))%>%
+  mutate(Gapdh_I = rowMeans((.[,11:12]) ,na.rm=TRUE))%>%
+  mutate(Kpnb1_I = rowMeans((.[,13:14]) ,na.rm=TRUE))%>%
+  mutate(Myc_I = rowMeans((.[,15:16]) ,na.rm=TRUE))%>%
+   mutate(Nras_I = rowMeans((.[,17:18]) ,na.rm=TRUE))%>%
+  mutate(P53_I = rowMeans((.[,19:20]) ,na.rm=TRUE))%>%
+  mutate(Rab7a_I = rowMeans((.[,21:22]) ,na.rm=TRUE))%>%
+  mutate(Rpap3_I = rowMeans((.[,23:24]) ,na.rm=TRUE))%>%
+  mutate(RhoA_I = rowMeans((.[,25:26]) ,na.rm=TRUE))%>%
+  mutate(Sec16a_I = rowMeans((.[,27:28]) ,na.rm=TRUE))%>%
+  mutate(Slc2a1_I = rowMeans((.[,29:30]) ,na.rm=TRUE))
+  
+#subsetting the _I entries only
+replicates_average_M<-replicates_average_M%>%select(c(1,2) , contains("_I", ignore.case = TRUE, vars = NULL) )  # change it to include Well name
+
+colnames(replicates_average_M)
+
+
+
+
+Mean_Untreated_Int<-colMeans(Untreated_Data[sapply(Untreated_Data, is.numeric)], na.rm = TRUE)
+
+test<- Untreated_Data[sapply(Untreated_Data, is.numeric)]
+Median_Untreated_Int<-apply(test,2,median,na.rm = TRUE)
+SD_Untreated_Int<-apply(test,2,sd,na.rm = TRUE)
+Mean_Untreated_Int
+Median_Untreated_Int
+SD_Untreated_Int
+Untreated_Mean_Median_SD<- cbind(Mean_Untreated_Int,Median_Untreated_Int, SD_Untreated_Int )
+write.csv(Untreated_Mean_Median_SD, "Output/HBEC_Int_Untreated_Mean_Median_SD.csv")
+
+Untreated_Mean_Median_SD<- as.data.frame(Untreated_Mean_Median_SD)
+```
+                                        Generating the files for export
+
+- Normalizing the values with "Mean" of untreated for both replicates and average
+- exporting the final file with compound name and treated average
+
+
+
+```{r}
+
+replicates_average_mean_normalized<-replicates_average_M%>%
+  mutate(Canx_I= Canx_I/139.7 )%>%
+  mutate(Dnajc5_I= Dnajc5_I/116.97 )%>%
+  mutate(Egfr_I= Egfr_I/252.7 )%>%
+  mutate(Errfi1_I= Errfi1_I/105.8 )%>%
+  mutate(Gapdh_I= Gapdh_I/164.4 )%>%
+  mutate(Kpnb1_I= Kpnb1_I/112.9 )%>%
+  mutate(Myc_I= Myc_I/134 )%>%
+  mutate(Nras_I= Nras_I/91.9 )%>%
+  mutate(P53_I= P53_I/98.8 )%>%
+  mutate(Rab7a_I= Rab7a_I/185 )%>%
+  mutate(Rpap3_I= Rpap3_I/126.6 )%>%
+  mutate(RhoA_I= RhoA_I/81.5 )%>%
+  mutate(Sec16a_I= Sec16a_I/100.08 )%>%
+mutate(Slc2a1_I= Slc2a1_I/134.43)
+
+
+Replicate1_Data_mean_normalized<-Replicate1_Data%>%
+  mutate(Canx= Canx/139.7 )%>%
+  mutate(Dnajc5= Dnajc5/116.97 )%>%
+  mutate(Egfr= Egfr/252.7 )%>%
+  mutate(Errfi1= Errfi1/105.8 )%>%
+  mutate(Gapdh= Gapdh/164.4 )%>%
+  mutate(Kpnb1= Kpnb1/112.9 )%>%
+  mutate(Myc= Myc/134 )%>%
+  mutate(Nras= Nras/91.9 )%>%
+  mutate(P53= P53/98.8 )%>%
+  mutate(Rab7a= Rab7a/185 )%>%
+  mutate(Rpap3= Rpap3/126.6 )%>%
+  mutate(RhoA= RhoA/81.5 )%>%
+  mutate(Sec16a= Sec16a/100.08 )%>%
+mutate(Slc2a1= Slc2a1/134.43)
+
+
+
+Replicate2_Data_mean_normalized<-Replicate2_Data%>%
+    mutate(Canx= Canx/139.7 )%>%
+  mutate(Dnajc5= Dnajc5/116.97 )%>%
+  mutate(Egfr= Egfr/252.7 )%>%
+  mutate(Errfi1= Errfi1/105.8 )%>%
+  mutate(Gapdh= Gapdh/164.4 )%>%
+  mutate(Kpnb1= Kpnb1/112.9 )%>%
+  mutate(Myc= Myc/134 )%>%
+  mutate(Nras= Nras/91.9 )%>%
+  mutate(P53= P53/98.8 )%>%
+  mutate(Rab7a= Rab7a/185 )%>%
+  mutate(Rpap3= Rpap3/126.6 )%>%
+  mutate(RhoA= RhoA/81.5 )%>%
+  mutate(Sec16a= Sec16a/100.08 )%>%
+mutate(Slc2a1= Slc2a1/134.43)
+  
+  
+  
+
+
+
+
+
+# renaming the columns
+
+  colname<-colnames(replicates_average_mean_normalized)
+  colname[1:2]<-c("WellName_R1", "WellName_R2")
+  colnames(replicates_average_mean_normalized)<-colname
+  
+
+  
+
+# using the existing list from xls attaching the compund name to the Mean data next to the well data 
+
+WellNameCompound<- read.csv(file = 'Metadata/WellNameCompound.csv')
+colnames(WellNameCompound)
+colnames(replicates_average_mean_normalized)
+replicates_average_mean_normalized_compounds<- replicates_average_mean_normalized%>%full_join(WellNameCompound, by = "WellName_R1")
+
+
+
+
+write.csv(replicates_average_mean_normalized_compounds, "Output/HBEC_Int.csv", row.names = FALSE)
+write.csv(Replicate1_Data_mean_normalized, "Output/HBEC_Int_Replicate1.csv", row.names=FALSE)
+write.csv(Replicate2_Data_mean_normalized, "Output/HBEC_Int_Replicate2.csv", row.names=FALSE)
+
+sum(is.na(replicates_average_mean_normalized_compounds))
+sum(is.na(Replicate1_Data_mean_normalized))
+sum(is.na(Replicate2_Data_mean_normalized))
+
+```
+
+Input: HBEC_Int.csv 
+Output: CSV file with line 22 and 98 removed and compounds class added to the data 
+
+Generating frequency with Class columns
+
+
+```{r}
+data1 <- read.csv("Output/HBEC_Int.csv", comment.char="#")
+
+#adding classes and ordering the data frame
+
+class_compound<- read.csv("Metadata/Epi_Data_HBEC_Class.csv")
+class_compound<-class_compound[c(1,2)] 
+data1 <-data1%>% filter(!row_number() %in% c(22,98))    # removing the blank column separately 
+class_compound <-class_compound%>% filter(!row_number() %in% c(22,98)) # removing the blank column separately 
+data1<-cbind( class_compound,data1 ) # was not able to remoce row 22 and 98 after combining
+ # removing the second reduntant compound column 19
+
+data1<- data1[-c(19)]
+colnames(data1)
+sorted_class<-data1[with(data1, order(Class, Compound)),]
+colnames(sorted_class)
+write.csv(sorted_class, "Output/HBEC_Int_Class_Sorted_22_98-removed.csv", row.names = FALSE)
+
+
+```
+
+       Using this module for the final figure. 
+
+Input: HBEC_Freq.csv file from line 706 that has NA changed to "20"
+Output: Heat map with 
+        a. Sorted compound
+        b. ascending gene order
+        c NA left white
+```{r}
+# keeping the NA, they wil be white on the plot
+
+sorted_class <- read.csv("Output/HBEC_Int_Class_Sorted_22_98-removed.csv", comment.char="#")# row 22 already removed
+colnames(sorted_class)
+rnames <- sorted_class[,2]                            # assign labels in column 1 to "rnames"
+mat_data <- data.matrix(sorted_class[,5:18])  # transform column 3-5 into a matrix
+rownames(mat_data) <- rnames  
+#print(head(mat_data))
+
+
+my_palette <- colorRampPalette(c("red", "cornsilk", "blue"))(n = 299)
+col_breaks = c(seq(.001,0.75,length=100),  # for red
+               seq(0.76,1.25,length=100),           # for yellow
+               seq(1.26,2,length=100)             # for green
+               )      # for black
+
+
+
+heatmap.2(mat_data, 
+           lhei = c(2,12),
+           main = "HBEC_Int",
+           margin=c(10,12),
+          cexRow = .2,
+           col= my_palette,
+           breaks = col_breaks,
+           trace = "none",
+           dendrogram="none",
+          density.info="none",
+          
+          Colv=FALSE, Rowv=FALSE)# for non clustered heat map
+
+
+
+             
+

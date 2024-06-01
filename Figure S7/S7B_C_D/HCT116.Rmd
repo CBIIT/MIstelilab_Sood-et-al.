@@ -1,0 +1,1271 @@
+---
+title: "ClassAndOverall_changes"
+author: "Varun"
+date: "2/7/2023"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Using the bursting data for HBEC generated in figure 2B 2C and 2D
+
+
+```{r}
+library(readr)
+library (dplyr)
+library(ggplot2)
+library(plyr)
+library(tidyverse)
+library(knitr)
+library(SpatialTools)
+library(reshape2)
+library(data.table)
+library(tidyr)
+library(RColorBrewer)
+library(gplots)
+library(ggbreak)
+library(patchwork)
+
+
+
+library(RColorBrewer)
+library(viridis)
+library(readr)
+library (dplyr)
+library(ggplot2)
+library(plyr)
+library(tidyverse)
+library(knitr)
+library(SpatialTools)
+library(reshape2)
+library(data.table)
+library(tidyr)
+library(RColorBrewer)
+
+library(ggprism)
+
+library(gplots)
+```
+
+Reading tables and attaching the class
+```{r}
+## Preparing averaged and replicate files for  freq int and het
+########################################### Freq###########
+
+Freq12<-read.csv(file= 'Metadata/HCT116_Freq.csv')
+Freq1<-read.csv(file= 'Metadata/HCT116_Freq_Replicate1.csv')
+Freq2<-read.csv(file= 'Metadata/HCT116_Freq_Replicate2.csv')
+Freq_untreated<- read.csv(file= 'Metadata/HCT116_Freq_Untreated.csv')
+colnames(Freq12)
+colnames(Freq12)[c(17)]<-"typo.compounds"
+colnames(Freq1)[c(1)]<-"WellName_R1"
+colnames(Freq2)[c(1)]<-"WellName_R2"
+## getting the compound and class addred to average file
+class_compound<- read.csv("Metadata/Epi_Data_HBEC_Class.csv")
+class_compound<-class_compound[c(1,2)]  
+Freq12<-cbind( class_compound,Freq12 ) # used cbind instead of full join with compounds as reference since compounds in the Int 12 file had wierd characters after export
+# adding class and compound to replicates
+R1<-Freq12[c(1,2,3)]
+R2<-Freq12[c(1,2,4)]
+Freq1<-Freq1%>%full_join(R1, by = "WellName_R1")
+Freq2<-Freq2%>%full_join(R2, by = "WellName_R2")
+# colnames(Freq1)[c(9)]<-"Nras"
+# colnames(Freq2)[c(9)]<-"Nras"
+
+Freq12 <-Freq12%>% filter(!row_number() %in% c(22,98)) 
+Freq1 <-Freq1 %>% filter(!row_number() %in% c(22,98)) 
+Freq2  <-Freq2 %>% filter(!row_number() %in% c(22,98)) 
+
+
+########################################### INT  ###########
+
+Int12<-read.csv(file= 'Metadata/HCT116_Int.csv')
+Int1<-read.csv(file= 'Metadata/HCT116_Int_Replicate1.csv')
+Int2<-read.csv(file= 'Metadata/HCT116_Int_Replicate2.csv')
+Int_untreated<- read.csv(file= 'Metadata/HCT116_Int_Untreated.csv')
+Int_untreated<-  Int_untreated[c(-1)]  # removing idex ro
+#Int12<-Int12[c(-1)]
+colnames(Int12)
+colnames(Int12)[c(17)]<-"typo.compounds"
+colnames(Int1)[c(1)]<-"WellName_R1"
+colnames(Int2)[c(1)]<-"WellName_R2"
+## getting the compound and class addred to average file
+class_compound<- read.csv("Metadata/Epi_Data_HBEC_Class.csv")
+class_compound<-class_compound[c(1,2)]  
+Int12<-cbind( class_compound,Int12 ) # used cbind since 8 compounds in the Int 12 file had wierd characters
+# adding class and compound to replicates
+R1<-Int12[c(1,2,3)]
+R2<-Int12[c(1,2,4)]
+Int1<-Int1%>%full_join(R1, by = "WellName_R1")
+Int2<-Int2%>%full_join(R2, by = "WellName_R2")
+
+Int12 <-Int12%>% filter(!row_number() %in% c(22,98)) 
+Int1 <-Int1 %>% filter(!row_number() %in% c(22,98)) 
+Int2  <-Int2 %>% filter(!row_number() %in% c(22,98)) 
+
+########################################### HET  ###########
+
+Het12<-read.csv(file= 'Metadata/HCT116_Het.csv')
+Het1<-read.csv(file= 'Metadata/HCT116_Het_Replicate1.csv')
+Het2<-read.csv(file= 'Metadata/HCT116_Het_Replicate2.csv')
+colnames(Het12)
+Het_untreated<- read.csv(file= 'Metadata/HCT116_Het_Untreated.csv')
+Het_untreated<-  Het_untreated[c(-1)]  # removing idex ro
+#Het12<- Het12[c(-1)]
+colnames(Het12)[c(17)]<-"typo.compounds"
+colnames(Het1)[c(1)]<-"WellName_R1"
+colnames(Het2)[c(1)]<-"WellName_R2"
+## getting the compound and class addred to average file
+class_compound<- read.csv("Metadata/Epi_Data_HBEC_Class.csv")
+class_compound<-class_compound[c(1,2)]  
+Het12<-cbind( class_compound,Het12 ) # used cbind since 8 compounds in the Int 12 file had wierd characters
+# adding class and compound to replicates
+R1<-Het12[c(1,2,3)]
+R2<-Het12[c(1,2,4)]
+Het1<-Het1%>%full_join(R1, by = "WellName_R1")
+Het2<-Het2%>%full_join(R2, by = "WellName_R2")
+
+
+Het12 <-Het12%>% filter(!row_number() %in% c(22,98)) 
+Het1 <-Het1 %>% filter(!row_number() %in% c(22,98)) 
+Het2  <-Het2 %>% filter(!row_number() %in% c(22,98)) 
+
+# freq<- freq1[c(3:16)]
+# int<-int1[c(3:16)]
+# het<-het1[c(3:16)]
+```
+
+For Figure 2B: 
+
+ Calculating the absolute value of change for the freq int  for comparison with the untreated
+HCT116_Freq_NativeVSMean.csv
+
+
+```{r}
+
+########################################### MOD change FREQ  ##################################################################################
+
+
+
+Mean_Abs_dFreq1<- Freq1 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Absolute_Canx=abs(Canx-1), 
+                                                                      Absolute_Dnajc5=abs(Dnajc5-1),
+                                                                      Absolute_Egfr=abs(Egfr-1),
+                                                                      Absolute_Errfi1=abs(Errfi1-1),
+                                                                      Absolute_Gapdh=abs(Gapdh-1),
+                                                                      Absolute_Kpnb1=abs(Kpnb1-1),
+                                                                      Absolute_Myc=abs(Myc-1),
+                                                                      Absolute_Nras=abs(Nras-1),
+                                                                      Absolute_P53=abs(P53-1),
+                                                                      Absolute_Rab7a=abs(Rab7a-1),
+                                                                      Absolute_RhoA=abs(RhoA-1),
+                                                                      Absolute_Rpap3=abs(Rpap3-1),
+                                                                      Absolute_Sec16a=abs(Sec16a-1),
+                                                                      Absolute_Slc2a1=abs(Slc2a1-1)
+                                                                      )%>%
+                                                                      summarise(Canx=mean(Absolute_Canx, na.rm = TRUE), 
+                                                                      Dnajc5=mean(Absolute_Dnajc5, na.rm = TRUE),
+                                                                      Egfr=mean(Absolute_Egfr, na.rm = TRUE),
+                                                                      Errfi1=mean(Absolute_Errfi1, na.rm = TRUE),
+                                                                      Gapdh=mean(Absolute_Gapdh, na.rm = TRUE),
+                                                                      Kpnb1=mean(Absolute_Kpnb1, na.rm = TRUE),
+                                                                      Myc=mean(Absolute_Myc, na.rm = TRUE),
+                                                                      Nras=mean(Absolute_Nras, na.rm = TRUE),
+                                                                      P53=mean(Absolute_P53, na.rm = TRUE),
+                                                                      Rab7a=mean(Absolute_Rab7a , na.rm = TRUE),
+                                                                      RhoA=mean(Absolute_RhoA, na.rm = TRUE),
+                                                                      Rpap3=mean(Absolute_Rpap3, na.rm = TRUE),
+                                                                      Sec16a=mean(Absolute_Sec16a, na.rm = TRUE),
+                                                                      Slc2a1=mean(Absolute_Slc2a1, na.rm = TRUE)
+                                                                      )%>%
+t()%>% as.data.frame()%>%mutate(HCT116_dFre2=V1)%>%select(c(-1))
+
+
+
+Mean_Abs_dFreq2<- Freq2 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Absolute_Canx=abs(Canx-1), 
+                                                                      Absolute_Dnajc5=abs(Dnajc5-1),
+                                                                      Absolute_Egfr=abs(Egfr-1),
+                                                                      Absolute_Errfi1=abs(Errfi1-1),
+                                                                      Absolute_Gapdh=abs(Gapdh-1),
+                                                                      Absolute_Kpnb1=abs(Kpnb1-1),
+                                                                      Absolute_Myc=abs(Myc-1),
+                                                                      Absolute_Nras=abs(Nras-1),
+                                                                      Absolute_P53=abs(P53-1),
+                                                                      Absolute_Rab7a=abs(Rab7a-1),
+                                                                      Absolute_RhoA=abs(RhoA-1),
+                                                                      Absolute_Rpap3=abs(Rpap3-1),
+                                                                      Absolute_Sec16a=abs(Sec16a-1),
+                                                                      Absolute_Slc2a1=abs(Slc2a1-1)
+                                                                      )%>%
+                                                                      summarise(Canx=mean(Absolute_Canx, na.rm = TRUE), 
+                                                                      Dnajc5=mean(Absolute_Dnajc5, na.rm = TRUE),
+                                                                      Egfr=mean(Absolute_Egfr, na.rm = TRUE),
+                                                                      Errfi1=mean(Absolute_Errfi1, na.rm = TRUE),
+                                                                      Gapdh=mean(Absolute_Gapdh, na.rm = TRUE),
+                                                                      Kpnb1=mean(Absolute_Kpnb1, na.rm = TRUE),
+                                                                      Myc=mean(Absolute_Myc, na.rm = TRUE),
+                                                                      Nras=mean(Absolute_Nras, na.rm = TRUE),
+                                                                      P53=mean(Absolute_P53, na.rm = TRUE),
+                                                                      Rab7a=mean(Absolute_Rab7a , na.rm = TRUE),
+                                                                      RhoA=mean(Absolute_RhoA, na.rm = TRUE),
+                                                                      Rpap3=mean(Absolute_Rpap3, na.rm = TRUE),
+                                                                      Sec16a=mean(Absolute_Sec16a, na.rm = TRUE),
+                                                                      Slc2a1=mean(Absolute_Slc2a1, na.rm = TRUE)
+                                                                      )%>%
+t()%>% as.data.frame()%>%mutate(HCT116_dFre2=V1)%>%select(c(-1))
+
+
+
+# calculating the mean and SE of the untreated smaples
+
+Mean_Untreated_Freq<-Freq_untreated%>% summarise(Canx=mean(Canx, na.rm = TRUE), 
+                                                                      Dnajc5=mean(Dnajc5, na.rm = TRUE),
+                                                                      Egfr=mean(Egfr, na.rm = TRUE),
+                                                                      Errfi1=mean(Errfi1, na.rm = TRUE),
+                                                                      Gapdh=mean(Gapdh, na.rm = TRUE),
+                                                                      Kpnb1=mean(Kpnb1, na.rm = TRUE),
+                                                                      Myc=mean(Myc, na.rm = TRUE),
+                                                                      Nras=mean(Nras, na.rm = TRUE),
+                                                                      P53=mean(P53, na.rm = TRUE),
+                                                                      Rab7a=mean(Rab7a , na.rm = TRUE),
+                                                                      RhoA=mean(RhoA, na.rm = TRUE),
+                                                                      Rpap3=mean(Rpap3, na.rm = TRUE),
+                                                                      Sec16a=mean(Sec16a, na.rm = TRUE),
+                                                                      Slc2a1=mean(Slc2a1, na.rm = TRUE)
+                                                                      )%>%
+t()%>% as.data.frame()%>%mutate(HCT116_Mean_Ctrl_freq=V1)%>%select(c(-1))
+
+SD_Untreated_Freq<-Freq_untreated%>% summarise(Canx=sd(Canx, na.rm = TRUE), 
+                                                                      Dnajc5=sd(Dnajc5, na.rm = TRUE),
+                                                                      Egfr=sd(Egfr, na.rm = TRUE),
+                                                                      Errfi1=sd(Errfi1, na.rm = TRUE),
+                                                                      Gapdh=sd(Gapdh, na.rm = TRUE),
+                                                                      Kpnb1=sd(Kpnb1, na.rm = TRUE),
+                                                                      Myc=sd(Myc, na.rm = TRUE),
+                                                                      Nras=sd(Nras, na.rm = TRUE),
+                                                                      P53=sd(P53, na.rm = TRUE),
+                                                                      Rab7a=sd(Rab7a , na.rm = TRUE),
+                                                                      RhoA=sd(RhoA, na.rm = TRUE),
+                                                                      Rpap3=sd(Rpap3, na.rm = TRUE),
+                                                                      Sec16a=sd(Sec16a, na.rm = TRUE),
+                                                                      Slc2a1=sd(Slc2a1, na.rm = TRUE)
+                                                                      )%>%
+t()%>% as.data.frame()%>%mutate(HCT116_SD_Ctrl_Freq=V1)%>%select(c(-1))
+  
+  
+Samples_Untreated_Freq <-colSums(!is.na(Freq_untreated[c(-1)]))%>% as.data.frame()
+colnames(Samples_Untreated_Freq)<-"Sample_number"
+SE_untreated_Freq<- cbind(SD_Untreated_Freq,Samples_Untreated_Freq)
+
+
+
+
+
+
+SE_untreated_Freq<- cbind(SD_Untreated_Freq,Samples_Untreated_Freq)%>%mutate(SE_HCT116_Ctrl = HCT116_SD_Ctrl_Freq/sqrt(Sample_number))%>%select(c(3))
+
+                            
+                                                                        
+                                               
+HCT116_freq_Native_ModCHange<-cbind(Mean_Untreated_Freq,SE_untreated_Freq,Mean_Abs_dFreq1,Mean_Abs_dFreq2)
+
+write.csv(HCT116_freq_Native_ModCHange, 'Output/HCT116_Freq_NativeVSMean.csv')
+
+
+
+
+
+
+
+########################################### MOD change INT  ##################################################################################
+
+# getting the absolute change and the mean for freq1 and 2, transposing , then renaming the columns to gene names
+
+Mean_Abs_dInt1<- Int1 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Absolute_Canx=abs(Canx-1), 
+                                                                      Absolute_Dnajc5=abs(Dnajc5-1),
+                                                                      Absolute_Egfr=abs(Egfr-1),
+                                                                      Absolute_Errfi1=abs(Errfi1-1),
+                                                                      Absolute_Gapdh=abs(Gapdh-1),
+                                                                      Absolute_Kpnb1=abs(Kpnb1-1),
+                                                                      Absolute_Myc=abs(Myc-1),
+                                                                      Absolute_Nras=abs(Nras-1),
+                                                                      Absolute_P53=abs(P53-1),
+                                                                      Absolute_Rab7a=abs(Rab7a-1),
+                                                                      Absolute_RhoA=abs(RhoA-1),
+                                                                      Absolute_Rpap3=abs(Rpap3-1),
+                                                                      Absolute_Sec16a=abs(Sec16a-1),
+                                                                      Absolute_Slc2a1=abs(Slc2a1-1)
+                                                                      )%>%
+                                                                      summarise(Canx=mean(Absolute_Canx, na.rm = TRUE), 
+                                                                      Dnajc5=mean(Absolute_Dnajc5, na.rm = TRUE),
+                                                                      Egfr=mean(Absolute_Egfr, na.rm = TRUE),
+                                                                      Errfi1=mean(Absolute_Errfi1, na.rm = TRUE),
+                                                                      Gapdh=mean(Absolute_Gapdh, na.rm = TRUE),
+                                                                      Kpnb1=mean(Absolute_Kpnb1, na.rm = TRUE),
+                                                                      Myc=mean(Absolute_Myc, na.rm = TRUE),
+                                                                      Nras=mean(Absolute_Nras, na.rm = TRUE),
+                                                                      P53=mean(Absolute_P53, na.rm = TRUE),
+                                                                      Rab7a=mean(Absolute_Rab7a , na.rm = TRUE),
+                                                                      RhoA=mean(Absolute_RhoA, na.rm = TRUE),
+                                                                      Rpap3=mean(Absolute_Rpap3, na.rm = TRUE),
+                                                                      Sec16a=mean(Absolute_Sec16a, na.rm = TRUE),
+                                                                      Slc2a1=mean(Absolute_Slc2a1, na.rm = TRUE)
+                                                                      )%>%
+t()%>% as.data.frame()%>%mutate(HCT116_dInt1=V1)%>%select(c(-1))
+
+
+
+Mean_Abs_dInt2<- Int2 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Absolute_Canx=abs(Canx-1), 
+                                                                      Absolute_Dnajc5=abs(Dnajc5-1),
+                                                                      Absolute_Egfr=abs(Egfr-1),
+                                                                      Absolute_Errfi1=abs(Errfi1-1),
+                                                                      Absolute_Gapdh=abs(Gapdh-1),
+                                                                      Absolute_Kpnb1=abs(Kpnb1-1),
+                                                                      Absolute_Myc=abs(Myc-1),
+                                                                      Absolute_Nras=abs(Nras-1),
+                                                                      Absolute_P53=abs(P53-1),
+                                                                      Absolute_Rab7a=abs(Rab7a-1),
+                                                                      Absolute_RhoA=abs(RhoA-1),
+                                                                      Absolute_Rpap3=abs(Rpap3-1),
+                                                                      Absolute_Sec16a=abs(Sec16a-1),
+                                                                      Absolute_Slc2a1=abs(Slc2a1-1)
+                                                                      )%>%
+                                                                      summarise(Canx=mean(Absolute_Canx, na.rm = TRUE), 
+                                                                      Dnajc5=mean(Absolute_Dnajc5, na.rm = TRUE),
+                                                                      Egfr=mean(Absolute_Egfr, na.rm = TRUE),
+                                                                      Errfi1=mean(Absolute_Errfi1, na.rm = TRUE),
+                                                                      Gapdh=mean(Absolute_Gapdh, na.rm = TRUE),
+                                                                      Kpnb1=mean(Absolute_Kpnb1, na.rm = TRUE),
+                                                                      Myc=mean(Absolute_Myc, na.rm = TRUE),
+                                                                      Nras=mean(Absolute_Nras, na.rm = TRUE),
+                                                                      P53=mean(Absolute_P53, na.rm = TRUE),
+                                                                      Rab7a=mean(Absolute_Rab7a , na.rm = TRUE),
+                                                                      RhoA=mean(Absolute_RhoA, na.rm = TRUE),
+                                                                      Rpap3=mean(Absolute_Rpap3, na.rm = TRUE),
+                                                                      Sec16a=mean(Absolute_Sec16a, na.rm = TRUE),
+                                                                      Slc2a1=mean(Absolute_Slc2a1, na.rm = TRUE)
+                                                                      )%>%
+t()%>% as.data.frame()%>%mutate(HCT116_dInt2=V1)%>%select(c(-1))
+
+
+
+# calculating the mean and SE of the untreated smaples
+
+Mean_Untreated_Int<-Int_untreated%>% summarise(Canx=mean(Canx, na.rm = TRUE), 
+                                                                      Dnajc5=mean(Dnajc5, na.rm = TRUE),
+                                                                      Egfr=mean(Egfr, na.rm = TRUE),
+                                                                      Errfi1=mean(Errfi1, na.rm = TRUE),
+                                                                      Gapdh=mean(Gapdh, na.rm = TRUE),
+                                                                      Kpnb1=mean(Kpnb1, na.rm = TRUE),
+                                                                      Myc=mean(Myc, na.rm = TRUE),
+                                                                      Nras=mean(Nras, na.rm = TRUE),
+                                                                      P53=mean(P53, na.rm = TRUE),
+                                                                      Rab7a=mean(Rab7a , na.rm = TRUE),
+                                                                      RhoA=mean(RhoA, na.rm = TRUE),
+                                                                      Rpap3=mean(Rpap3, na.rm = TRUE),
+                                                                      Sec16a=mean(Sec16a, na.rm = TRUE),
+                                                                      Slc2a1=mean(Slc2a1, na.rm = TRUE)
+                                                                      )%>%
+t()%>% as.data.frame()%>%mutate(HCT116_Mean_Ctrl_Int=V1)%>%select(c(-1))
+
+SD_Untreated_Int<-Int_untreated%>% summarise(Canx=sd(Canx, na.rm = TRUE), 
+                                                                      Dnajc5=sd(Dnajc5, na.rm = TRUE),
+                                                                      Egfr=sd(Egfr, na.rm = TRUE),
+                                                                      Errfi1=sd(Errfi1, na.rm = TRUE),
+                                                                      Gapdh=sd(Gapdh, na.rm = TRUE),
+                                                                      Kpnb1=sd(Kpnb1, na.rm = TRUE),
+                                                                      Myc=sd(Myc, na.rm = TRUE),
+                                                                      Nras=sd(Nras, na.rm = TRUE),
+                                                                      P53=sd(P53, na.rm = TRUE),
+                                                                      Rab7a=sd(Rab7a , na.rm = TRUE),
+                                                                      RhoA=sd(RhoA, na.rm = TRUE),
+                                                                      Rpap3=sd(Rpap3, na.rm = TRUE),
+                                                                      Sec16a=sd(Sec16a, na.rm = TRUE),
+                                                                      Slc2a1=sd(Slc2a1, na.rm = TRUE)
+                                                                      )%>%
+t()%>% as.data.frame()%>%mutate(HCT116_SD_Ctrl_Int=V1)%>%select(c(-1))
+  
+  
+Samples_Untreated_Int <-colSums(!is.na(Int_untreated[c(-1)]))%>% as.data.frame()
+colnames(Samples_Untreated_Int)<-"Sample_number"
+SE_untreated_Int<- cbind(SD_Untreated_Int,Samples_Untreated_Int)
+
+
+
+
+
+
+SE_untreated_Int<- cbind(SD_Untreated_Int,Samples_Untreated_Int)%>%mutate(SE_HCT116_Ctrl = HCT116_SD_Ctrl_Int/sqrt(Sample_number))%>%select(c(3))
+
+                            
+                                                                        
+                                               
+HCT116_Int_Native_ModCHange<-cbind(Mean_Untreated_Int,SE_untreated_Int,Mean_Abs_dInt1,Mean_Abs_dInt2)
+
+write.csv(HCT116_Int_Native_ModCHange, 'Output/HCT116_Int_NativeVSMean.csv')
+
+
+
+```
+
+FOR FIGURE 2C, 3C and S7C
+
+Calculating the change by subtracting 1 and taking the mod to get the average change per compound class for freq het and int 
+HCT116_mod_class_average_freq_int_het.csv
+
+
+```{r}
+                                                          ############# frequency #################
+Mod_HCT116_freq<- Freq12 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(abs(Canx_F-1)), 
+                                                                      Dnajc5=(abs(Dnajc5_F-1)),
+                                                                      Egfr=(abs(Egfr_F-1)),
+                                                                      Errfi1=(abs(Errfi1_F-1)),
+                                                                      Gapdh=(abs(Gapdh_F-1)),
+                                                                      Kpnb1=(abs(Kpnb1_F-1)),
+                                                                      Myc=(abs(Myc_F-1)),
+                                                                      Nras=(abs(Nras_F-1)),
+                                                                      P53=(abs(P53_F-1)),
+                                                                      Rab7a=(abs(Rab7a_F-1)),
+                                                                      RhoA=(abs(RhoA_F-1)),
+                                                                      Rpap3=(abs(Rpap3_F-1)),
+                                                                      Sec16a=(abs(Sec16a_F-1)),
+                                                                      Slc2a1=(abs(Slc2a1_F-1)))
+                                                                      
+
+Mod_HCT116_freq_1<- Freq1 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(abs(Canx-1)), 
+                                                                      Dnajc5=(abs(Dnajc5-1)),
+                                                                      Egfr=(abs(Egfr-1)),
+                                                                      Errfi1=(abs(Errfi1-1)),
+                                                                      Gapdh=(abs(Gapdh-1)),
+                                                                      Kpnb1=(abs(Kpnb1-1)),
+                                                                      Myc=(abs(Myc-1)),
+                                                                      Nras=(abs(Nras-1)),
+                                                                      P53=(abs(P53-1)),
+                                                                      Rab7a=(abs(Rab7a-1)),
+                                                                      RhoA=(abs(RhoA-1)),
+                                                                      Rpap3=(abs(Rpap3-1)),
+                                                                      Sec16a=(abs(Sec16a-1)),
+                                                                      Slc2a1=(abs(Slc2a1-1)))
+
+
+Mod_HCT116_freq_2<- Freq2 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(abs(Canx-1)), 
+                                                                      Dnajc5=(abs(Dnajc5-1)),
+                                                                      Egfr=(abs(Egfr-1)),
+                                                                      Errfi1=(abs(Errfi1-1)),
+                                                                      Gapdh=(abs(Gapdh-1)),
+                                                                      Kpnb1=(abs(Kpnb1-1)),
+                                                                      Myc=(abs(Myc-1)),
+                                                                      Nras=(abs(Nras-1)),
+                                                                      P53=(abs(P53-1)),
+                                                                      Rab7a=(abs(Rab7a-1)),
+                                                                      RhoA=(abs(RhoA-1)),
+                                                                      Rpap3=(abs(Rpap3-1)),
+                                                                      Sec16a=(abs(Sec16a-1)),
+                                                                      Slc2a1=(abs(Slc2a1-1)))
+
+
+
+
+
+
+
+                                                   ##################### Int  ##################
+
+Mod_HCT116_int<- Int12 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(abs(Canx_M-1)), 
+                                                                      Dnajc5=(abs(Dnajc5_M-1)),
+                                                                      Egfr=(abs(Egfr_M-1)),
+                                                                      Errfi1=(abs(Errfi1_M-1)),
+                                                                      Gapdh=(abs(Gapdh_M-1)),
+                                                                      Kpnb1=(abs(Kpnb1_M-1)),
+                                                                      Myc=(abs(Myc_M-1)),
+                                                                      Nras=(abs(Nras_M-1)),
+                                                                      P53=(abs(P53_M-1)),
+                                                                      Rab7a=(abs(Rab7a_M-1)),
+                                                                      RhoA=(abs(RhoA_M-1)),
+                                                                      Rpap3=(abs(Rpap3_M-1)),
+                                                                      Sec16a=(abs(Sec16a_M-1)),
+                                                                      Slc2a1=(abs(Slc2a1_M-1))
+                                                                      )
+
+
+Mod_HCT116_int_1<- Int1 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(abs(Canx-1)), 
+                                                                      Dnajc5=(abs(Dnajc5-1)),
+                                                                      Egfr=(abs(Egfr-1)),
+                                                                      Errfi1=(abs(Errfi1-1)),
+                                                                      Gapdh=(abs(Gapdh-1)),
+                                                                      Kpnb1=(abs(Kpnb1-1)),
+                                                                      Myc=(abs(Myc-1)),
+                                                                      Nras=(abs(Nras-1)),
+                                                                      P53=(abs(P53-1)),
+                                                                      Rab7a=(abs(Rab7a-1)),
+                                                                      RhoA=(abs(RhoA-1)),
+                                                                      Rpap3=(abs(Rpap3-1)),
+                                                                      Sec16a=(abs(Sec16a-1)),
+                                                                      Slc2a1=(abs(Slc2a1-1))
+                                                                      )
+
+
+
+Mod_HCT116_int_2<- Int2 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(abs(Canx-1)), 
+                                                                      Dnajc5=(abs(Dnajc5-1)),
+                                                                      Egfr=(abs(Egfr-1)),
+                                                                      Errfi1=(abs(Errfi1-1)),
+                                                                      Gapdh=(abs(Gapdh-1)),
+                                                                      Kpnb1=(abs(Kpnb1-1)),
+                                                                      Myc=(abs(Myc-1)),
+                                                                      Nras=(abs(Nras-1)),
+                                                                      P53=(abs(P53-1)),
+                                                                      Rab7a=(abs(Rab7a-1)),
+                                                                      RhoA=(abs(RhoA-1)),
+                                                                      Rpap3=(abs(Rpap3-1)),
+                                                                      Sec16a=(abs(Sec16a-1)),
+                                                                      Slc2a1=(abs(Slc2a1-1))
+                                                                      )
+
+
+
+
+
+
+
+##################### Het  ##################
+
+
+
+
+Mod_HCT116_het<- Het12 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Mod(Canx_H-1)), 
+                                                                      Dnajc5=(Mod(Dnajc5_H-1)),
+                                                                      Egfr=(Mod(Egfr_H-1)),
+                                                                      Errfi1=(Mod(Errfi1_H-1)),
+                                                                      Gapdh=(Mod(Gapdh_H-1)),
+                                                                      Kpnb1=(Mod(Kpnb1_H-1)),
+                                                                      Myc=(Mod(Myc_H-1)),
+                                                                      Nras=(Mod(Nras_H-1)),
+                                                                      P53=(Mod(P53_H-1)),
+                                                                      Rab7a=(Mod(Rab7a_H-1)),
+                                                                      RhoA=(Mod(RhoA_H-1)),
+                                                                      Rpap3=(Mod(Rpap3_H-1)),
+                                                                      Sec16a=(Mod(Sec16a_H-1)),
+                                                                      Slc2a1=(Mod(Slc2a1_H-1))
+
+)
+
+Mod_HCT116_het_1<- Het1 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Mod(Canx-1)), 
+                                                                      Dnajc5=(Mod(Dnajc5-1)),
+                                                                      Egfr=(Mod(Egfr-1)),
+                                                                      Errfi1=(Mod(Errfi1-1)),
+                                                                      Gapdh=(Mod(Gapdh-1)),
+                                                                      Kpnb1=(Mod(Kpnb1-1)),
+                                                                      Myc=(Mod(Myc-1)),
+                                                                      Nras=(Mod(Nras-1)),
+                                                                      P53=(Mod(P53-1)),
+                                                                      Rab7a=(Mod(Rab7a-1)),
+                                                                      RhoA=(Mod(RhoA-1)),
+                                                                      Rpap3=(Mod(Rpap3-1)),
+                                                                      Sec16a=(Mod(Sec16a-1)),
+                                                                      Slc2a1=(Mod(Slc2a1-1))
+
+)
+
+Mod_HCT116_het_2<- Het2 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Mod(Canx-1)), 
+                                                                      Dnajc5=(Mod(Dnajc5-1)),
+                                                                      Egfr=(Mod(Egfr-1)),
+                                                                      Errfi1=(Mod(Errfi1-1)),
+                                                                      Gapdh=(Mod(Gapdh-1)),
+                                                                      Kpnb1=(Mod(Kpnb1-1)),
+                                                                      Myc=(Mod(Myc-1)),
+                                                                      Nras=(Mod(Nras-1)),
+                                                                      P53=(Mod(P53-1)),
+                                                                      Rab7a=(Mod(Rab7a-1)),
+                                                                      RhoA=(Mod(RhoA-1)),
+                                                                      Rpap3=(Mod(Rpap3-1)),
+                                                                      Sec16a=(Mod(Sec16a-1)),
+                                                                      Slc2a1=(Mod(Slc2a1-1))
+
+)
+
+
+
+
+
+
+
+
+
+
+############ averaging the Absolute values of mean change classwise ##############
+
+Cell_line<-replicate(7,rep("HCT116"))
+
+freq_long_1 <- Mod_HCT116_freq_1%>%pivot_longer(cols = c(3:16),
+               names_to = "gene",
+               values_to ="change_freq") %>% 
+  filter(Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'))%>%
+  as.tibble()%>%
+  group_by(Class)%>%
+  dplyr:::summarize(freq_mean1 = mean (change_freq, na.rm = TRUE))
+
+
+freq_long_2 <- Mod_HCT116_freq_2%>%pivot_longer(cols = c(3:16),
+               names_to = "gene",
+               values_to ="change_freq") %>% 
+  filter(Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'))%>%
+  as.tibble()%>%
+  group_by(Class)%>%
+  dplyr:::summarize(freq_mean2 = mean (change_freq, na.rm = TRUE))
+
+
+
+
+
+int_long_1 <- Mod_HCT116_int_1%>%pivot_longer(cols = c(3:16),
+               names_to = "gene",
+               values_to ="change_int") %>% 
+  filter(Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'))%>%
+  as.tibble()%>%
+  group_by(Class)%>%
+  dplyr:::summarize(int_mean1 = mean (change_int, na.rm = TRUE))
+
+
+int_long_2 <- Mod_HCT116_int_2%>%pivot_longer(cols = c(3:16),
+               names_to = "gene",
+               values_to ="change_int") %>% 
+  filter(Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'))%>%
+  as.tibble()%>%
+  group_by(Class)%>%
+  dplyr:::summarize(int_mean2 = mean (change_int, na.rm = TRUE))
+
+
+
+
+het_long_1 <- Mod_HCT116_het_1%>%pivot_longer(cols = c(3:16),
+               names_to = "gene",
+               values_to ="change_het") %>% 
+  filter(Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'))%>%
+  as.tibble()%>%
+  group_by(Class)%>%
+  dplyr:::summarize(het_mean1 = mean (change_het, na.rm = TRUE))
+
+
+het_long_2 <- Mod_HCT116_het_2%>%pivot_longer(cols = c(3:16),
+               names_to = "gene",
+               values_to ="change_het") %>% 
+  filter(Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'))%>%
+  as.tibble()%>%
+  group_by(Class)%>%
+  dplyr:::summarize(het_mean2 = mean (change_het, na.rm = TRUE))
+
+
+### Combining and writing the csv
+
+
+HCT116_freq1n2<-  freq_long_1%>%left_join(freq_long_2, by = "Class")%>%cbind(Cell_line) 
+HCT116_int1n2<-  int_long_1%>%left_join(int_long_2, by = "Class")%>%cbind(Cell_line) 
+HCT116_het1n2<-  het_long_1%>%left_join(het_long_2, by = "Class")%>%cbind(Cell_line) 
+HCT116_class_all_mod <- cbind(HCT116_freq1n2, HCT116_int1n2, HCT116_het1n2)
+
+write.csv(HCT116_class_all_mod, "Output/HCT116_mod_class_average_freq_int_het.csv")
+
+
+```
+
+
+Figure 2D, 3D and S7D
+
+Calculating the change by subtracting 1 and plotting classwise ralative change as box plot
+
+
+```{r}
+############# frequency #################
+NoMod_HCT116_freq<- Freq12 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx_F-1), 
+                                                                      Dnajc5=(Dnajc5_F-1),
+                                                                      Egfr=(Egfr_F-1),
+                                                                      Errfi1=(Errfi1_F-1),
+                                                                      Gapdh=(Gapdh_F-1),
+                                                                      Kpnb1=(Kpnb1_F-1),
+                                                                      Myc=(Myc_F-1),
+                                                                      Nras=(Nras_F-1),
+                                                                      P53=(P53_F-1),
+                                                                      Rab7a=(Rab7a_F-1),
+                                                                      RhoA=(RhoA_F-1),
+                                                                      Rpap3=(Rpap3_F-1),
+                                                                      Sec16a=(Sec16a_F-1),
+                                                                      Slc2a1=(Slc2a1_F-1)
+                                                                      )
+
+NoMod_HCT116_freq_1<- Freq1 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+                                                                      )
+
+NoMod_HCT116_freq_2<- Freq2 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+                                                                      )
+
+
+##################### Int  ##################
+
+NoMod_HCT116_int<- Int12 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx_M-1), 
+                                                                      Dnajc5=(Dnajc5_M-1),
+                                                                      Egfr=(Egfr_M-1),
+                                                                      Errfi1=(Errfi1_M-1),
+                                                                      Gapdh=(Gapdh_M-1),
+                                                                      Kpnb1=(Kpnb1_M-1),
+                                                                      Myc=(Myc_M-1),
+                                                                      Nras=(Nras_M-1),
+                                                                      P53=(P53_M-1),
+                                                                      Rab7a=(Rab7a_M-1),
+                                                                      RhoA=(RhoA_M-1),
+                                                                      Rpap3=(Rpap3_M-1),
+                                                                      Sec16a=(Sec16a_M-1),
+                                                                      Slc2a1=(Slc2a1_M-1)
+                                                                      )
+
+
+NoMod_HCT116_int_1<- Int1 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+                                                                      )
+
+
+
+NoMod_HCT116_int_2<- Int2 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+                                                                      )
+
+
+
+
+
+
+
+##################### Het  ##################
+
+
+
+
+NoMod_HCT116_het<- Het12 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx_H-1), 
+                                                                      Dnajc5=(Dnajc5_H-1),
+                                                                      Egfr=(Egfr_H-1),
+                                                                      Errfi1=(Errfi1_H-1),
+                                                                      Gapdh=(Gapdh_H-1),
+                                                                      Kpnb1=(Kpnb1_H-1),
+                                                                      Myc=(Myc_H-1),
+                                                                      Nras=(Nras_H-1),
+                                                                      P53=(P53_H-1),
+                                                                      Rab7a=(Rab7a_H-1),
+                                                                      RhoA=(RhoA_H-1),
+                                                                      Rpap3=(Rpap3_H-1),
+                                                                      Sec16a=(Sec16a_H-1),
+                                                                      Slc2a1=(Slc2a1_H-1)
+
+)
+
+NoMod_HCT116_het_1<- Het1 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+
+)
+
+NoMod_HCT116_het_2<- Het2 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+
+)
+
+
+
+
+
+
+
+########################### Freq    ########
+
+colnames(NoMod_HCT116_freq_1)
+colnames(NoMod_HCT116_freq_2)
+
+
+
+
+# removing compound names
+NoMod_HCT116_freq_1<-NoMod_HCT116_freq_1[c(-2)]
+NoMod_HCT116_freq_2<-NoMod_HCT116_freq_2[c(-2)]
+
+
+# pivotting long and selecting class
+
+NoMod_HCT116_freq_1_long <- NoMod_HCT116_freq_1%>%pivot_longer(cols = c(2:15),
+               names_to = "gene",
+               values_to ="change_freq")
+
+
+
+
+NoMod_HCT116_freq_1_long_class<-NoMod_HCT116_freq_1_long[NoMod_HCT116_freq_1_long$Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'), ]
+
+
+NoMod_HCT116_freq_2_long <- NoMod_HCT116_freq_2%>%pivot_longer(cols = c(2:15),
+               names_to = "gene",
+               values_to ="change_freq")
+
+
+
+
+NoMod_HCT116_freq_2_long_class<-NoMod_HCT116_freq_2_long[NoMod_HCT116_freq_2_long$Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'), ]
+# generating column for replicate
+
+Rep1<-replicate(1638,rep("#1"))
+Rep2<-replicate(1638,rep("#2"))
+
+NoMod_HCT116_freq_1_long_class<-cbind(NoMod_HCT116_freq_1_long_class, Rep1)
+NoMod_HCT116_freq_2_long_class<-cbind(NoMod_HCT116_freq_2_long_class, Rep2)
+
+colnames(NoMod_HCT116_freq_1_long_class)[c(4)]<-"Replicate"
+colnames(NoMod_HCT116_freq_2_long_class)[c(4)]<-"Replicate"
+
+
+NoMod_HCT116_freq_long_class_12<-rbind(NoMod_HCT116_freq_1_long_class, NoMod_HCT116_freq_2_long_class)
+
+
+######## 
+
+  
+  
+  ggplot(data= NoMod_HCT116_freq_long_class_12, aes(y=change_freq, x = Class, color= Replicate)) +geom_jitter(aes(color=Class), alpha=.7)+
+geom_boxplot(outlier.shape = NA, alpha = 0)+
+theme_prism()+scale_color_prism("prism_dark2")+ 
+  #theme_bw() + 
+  theme(axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 16),
+        axis.text.y = element_text(size = 14), axis.title.y = element_text(size = 16),
+        plot.title = element_text(size = 18, face = "bold", color = "Black", hjust = 0.5),
+        panel.border = element_blank(),
+        panel.background = element_rect(fill = "White"))+
+        labs(fill="")+
+        labs(title = "Classwise burst frequency changes: HCT116", x = "Inhibitor classes", y = "Relative burst frequency")+
+ylim(-1,1)
+
+
+
+########################### Int   ########
+
+
+colnames(NoMod_HCT116_int_1)
+colnames(NoMod_HCT116_int_2)
+
+# removing compound names
+NoMod_HCT116_int_1<-NoMod_HCT116_int_1[c(-2)]
+NoMod_HCT116_int_2<-NoMod_HCT116_int_2[c(-2)]
+
+
+
+
+NoMod_HCT116_int_1_long <- NoMod_HCT116_int_1%>%pivot_longer(cols = c(2:15),
+               names_to = "gene",
+               values_to ="change_int")
+NoMod_HCT116_int_1_long_class<-NoMod_HCT116_int_1_long[NoMod_HCT116_int_1_long$Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'), ]
+
+
+NoMod_HCT116_int_2_long <- NoMod_HCT116_int_2%>%pivot_longer(cols = c(2:15),
+               names_to = "gene",
+               values_to ="change_int")
+NoMod_HCT116_int_2_long_class<-NoMod_HCT116_int_2_long[NoMod_HCT116_int_2_long$Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'), ]
+
+
+
+Rep1<-replicate(1638,rep("#1"))
+Rep2<-replicate(1638,rep("#2"))
+
+NoMod_HCT116_int_1_long_class<-cbind(NoMod_HCT116_int_1_long_class, Rep1)
+NoMod_HCT116_int_2_long_class<-cbind(NoMod_HCT116_int_2_long_class, Rep2)
+
+colnames(NoMod_HCT116_int_1_long_class)[c(4)]<-"Replicate"
+colnames(NoMod_HCT116_int_2_long_class)[c(4)]<-"Replicate"
+
+
+NoMod_HCT116_int_long_class_12<-rbind(NoMod_HCT116_int_1_long_class, NoMod_HCT116_int_2_long_class)
+
+
+######## 
+# ggplot(data= NoMod_HCT116_int_long_class_12, aes(y=change_int, x = Class, fill= Replicate)) + geom_violin()+
+ggplot(data= NoMod_HCT116_int_long_class_12, aes(y=change_int, x = Class, color= Replicate)) +geom_jitter(aes(color=Class), alpha=.7)+
+  geom_boxplot(outlier.shape = NA, alpha = 0)+
+theme_prism()+scale_color_prism("prism_dark2")+ 
+  #theme_bw() +  
+  theme(axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 16),
+        axis.text.y = element_text(size = 14), axis.title.y = element_text(size = 16),
+        plot.title = element_text(size = 18, face = "bold", color = "Black", hjust = 0.5),
+        panel.border = element_blank(),
+        panel.background = element_rect(fill = "White"))+
+        labs(fill="")+
+        labs(title = "Classwise burst size changes: HCT116", x = "Inhibitor classes", y = "Relative burst size")+
+ylim(-.5,.5)
+
+
+
+
+
+
+
+
+########################### Het   ########
+
+
+colnames(NoMod_HCT116_het_1)
+colnames(NoMod_HCT116_het_2)
+
+# removing compound names
+NoMod_HCT116_het_1<-NoMod_HCT116_het_1[c(-2)]
+NoMod_HCT116_het_2<-NoMod_HCT116_het_2[c(-2)]
+
+
+
+
+NoMod_HCT116_het_1_long <- NoMod_HCT116_het_1%>%pivot_longer(cols = c(2:15),
+               names_to = "gene",
+               values_to ="change_het")
+NoMod_HCT116_het_1_long_class<-NoMod_HCT116_het_1_long[NoMod_HCT116_het_1_long$Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'), ]
+
+
+NoMod_HCT116_het_2_long <- NoMod_HCT116_het_2%>%pivot_longer(cols = c(2:15),
+               names_to = "gene",
+               values_to ="change_het")
+NoMod_HCT116_het_2_long_class<-NoMod_HCT116_het_2_long[NoMod_HCT116_het_2_long$Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'), ]
+
+
+
+Rep1<-replicate(1638,rep("#1"))
+Rep2<-replicate(1638,rep("#2"))
+
+NoMod_HCT116_het_1_long_class<-cbind(NoMod_HCT116_het_1_long_class, Rep1)
+NoMod_HCT116_het_2_long_class<-cbind(NoMod_HCT116_het_2_long_class, Rep2)
+
+colnames(NoMod_HCT116_het_1_long_class)[c(4)]<-"Replicate"
+colnames(NoMod_HCT116_het_2_long_class)[c(4)]<-"Replicate"
+
+
+NoMod_HCT116_het_long_class_12<-rbind(NoMod_HCT116_het_1_long_class, NoMod_HCT116_het_2_long_class)
+
+
+######## 
+# ggplot(data= NoMod_HCT116_het_long_class_12, aes(y=change_het, x = Class, fill= Replicate)) + geom_violin()+
+
+ggplot(data= NoMod_HCT116_het_long_class_12, aes(y=change_het, x = Class, color= Replicate)) +geom_jitter(aes(color=Class), alpha=.7)+
+  geom_boxplot(outlier.shape = NA, alpha = 0)+
+theme_prism()+scale_color_prism("prism_dark2")+ 
+  #theme_bw() + 
+  theme(axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 16),
+        axis.text.y = element_text(size = 14), axis.title.y = element_text(size = 16),
+        plot.title = element_text(size = 18, face = "bold", color = "Black", hjust = 0.5),
+        panel.border = element_blank(),
+        panel.background = element_rect(fill = "White"))+
+        labs(fill="")+
+        labs(title = "Classwise heterogeneity changes: HCT116", x = "Inhibitor classes", y = "Relative heterogeneity")+
+ylim(-1,1)
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+
+ 
+
+
+
+Figure3B and S7Bigure 3B
+
+```{r}
+NoMod_HCT116_freq<- Freq12 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx_F-1), 
+                                                                      Dnajc5=(Dnajc5_F-1),
+                                                                      Egfr=(Egfr_F-1),
+                                                                      Errfi1=(Errfi1_F-1),
+                                                                      Gapdh=(Gapdh_F-1),
+                                                                      Kpnb1=(Kpnb1_F-1),
+                                                                      Myc=(Myc_F-1),
+                                                                      Nras=(Nras_F-1),
+                                                                      P53=(P53_F-1),
+                                                                      Rab7a=(Rab7a_F-1),
+                                                                      RhoA=(RhoA_F-1),
+                                                                      Rpap3=(Rpap3_F-1),
+                                                                      Sec16a=(Sec16a_F-1),
+                                                                      Slc2a1=(Slc2a1_F-1)
+                                                                      )
+
+NoMod_HCT116_freq_1<- Freq1 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+                                                                      )
+
+NoMod_HCT116_freq_2<- Freq2 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+                                                                      )
+
+
+##################### Int  ##################
+
+NoMod_HCT116_int<- Int12 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx_M-1), 
+                                                                      Dnajc5=(Dnajc5_M-1),
+                                                                      Egfr=(Egfr_M-1),
+                                                                      Errfi1=(Errfi1_M-1),
+                                                                      Gapdh=(Gapdh_M-1),
+                                                                      Kpnb1=(Kpnb1_M-1),
+                                                                      Myc=(Myc_M-1),
+                                                                      Nras=(Nras_M-1),
+                                                                      P53=(P53_M-1),
+                                                                      Rab7a=(Rab7a_M-1),
+                                                                      RhoA=(RhoA_M-1),
+                                                                      Rpap3=(Rpap3_M-1),
+                                                                      Sec16a=(Sec16a_M-1),
+                                                                      Slc2a1=(Slc2a1_M-1)
+                                                                      )
+
+
+NoMod_HCT116_int_1<- Int1 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+                                                                      )
+
+
+
+NoMod_HCT116_int_2<- Int2 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+                                                                      )
+
+
+
+
+
+
+
+##################### Het  ##################
+
+
+
+
+NoMod_HCT116_het<- Het12 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx_H-1), 
+                                                                      Dnajc5=(Dnajc5_H-1),
+                                                                      Egfr=(Egfr_H-1),
+                                                                      Errfi1=(Errfi1_H-1),
+                                                                      Gapdh=(Gapdh_H-1),
+                                                                      Kpnb1=(Kpnb1_H-1),
+                                                                      Myc=(Myc_H-1),
+                                                                      Nras=(Nras_H-1),
+                                                                      P53=(P53_H-1),
+                                                                      Rab7a=(Rab7a_H-1),
+                                                                      RhoA=(RhoA_H-1),
+                                                                      Rpap3=(Rpap3_H-1),
+                                                                      Sec16a=(Sec16a_H-1),
+                                                                      Slc2a1=(Slc2a1_H-1)
+
+)
+
+NoMod_HCT116_het_1<- Het1 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+
+)
+
+NoMod_HCT116_het_2<- Het2 %>%as_tibble%>%summarise(Class = Class, Compound = Compound,Canx=(Canx-1), 
+                                                                      Dnajc5=(Dnajc5-1),
+                                                                      Egfr=(Egfr-1),
+                                                                      Errfi1=(Errfi1-1),
+                                                                      Gapdh=(Gapdh-1),
+                                                                      Kpnb1=(Kpnb1-1),
+                                                                      Myc=(Myc-1),
+                                                                      Nras=(Nras-1),
+                                                                      P53=(P53-1),
+                                                                      Rab7a=(Rab7a-1),
+                                                                      RhoA=(RhoA-1),
+                                                                      Rpap3=(Rpap3-1),
+                                                                      Sec16a=(Sec16a-1),
+                                                                      Slc2a1=(Slc2a1-1)
+
+)
+
+
+
+
+# Generating the  version and using C bind to get freq vs Int and Het vs Int
+
+
+freq_long_HCT116 <- NoMod_HCT116_freq%>%pivot_longer(cols = c(3:16),
+               names_to = "gene",
+               values_to ="change_freq")
+
+int_long_HCT116 <- NoMod_HCT116_int%>%pivot_longer(cols = c(3:16),
+               names_to = "gene",
+               values_to ="change_int")
+
+
+het_long_HCT116 <- NoMod_HCT116_het%>%pivot_longer(cols = c(3:16),
+               names_to = "gene",
+               values_to ="change_het")
+
+Cell_line<-replicate(1960,rep("HCT116"))
+
+freq_long_HCT116<-cbind(freq_long_HCT116, Cell_line)
+int_long_HCT116<-cbind(int_long_HCT116, Cell_line)
+het_long_HCT116<-cbind(het_long_HCT116, Cell_line)
+
+### freq and int NoMod ####
+
+freq_int_long_HCT116<- cbind(freq_long_HCT116,int_long_HCT116)
+freq_int_long_HCT116<-freq_int_long_HCT116[c(1:4,9,10)]
+write.csv(freq_int_long_HCT116, "Output/freq_int_long_HCT116.csv", row.names = FALSE)
+freq_int_long_HCT116_class<-freq_int_long_HCT116[freq_int_long_HCT116$Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'), ]
+
+
+### Het and Int NoMod ####
+
+het_int_long_HCT116<- cbind(het_long_HCT116,int_long_HCT116)
+het_int_long_HCT116<-het_int_long_HCT116[c(1:4,9,10)]
+write.csv(het_int_long_HCT116, "Output/het_int_long_HCT116.csv", row.names = FALSE)
+het_int_long_HCT116_class<-het_int_long_HCT116[het_int_long_HCT116$Class %in% c('Bromodomain','HDAC', 'Bromodomain', 'DNMT', 'HAT', 'Methylase', 'SIRT', 'Demythylase'), ]
+
+
+
+
+
+
+
